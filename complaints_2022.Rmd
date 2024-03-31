@@ -1,5 +1,5 @@
 ---
-title: "mapping_hate_crime"
+title: "complaints_2022"
 author: "Jiashu Liu"
 date: "2024-03-31"
 output: html_document
@@ -117,7 +117,9 @@ black_2022_monthly <- black_2022_daily %>%
 black22_monthly <- ggplotly(black_2022_monthly)
 black22_monthly
 ```
+```{r}
 
+```
 
 
 
