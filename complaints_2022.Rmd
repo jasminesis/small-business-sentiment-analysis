@@ -22,6 +22,8 @@ library(tidyverse)
 library(dplyr)
 library(ggplot2)
 library(lubridate)
+library(sf)
+library(tigris)
 library(gt) # for better table format
 library(plotly) # for interactive plot
 ```
@@ -34,13 +36,21 @@ complaint_2022 <- NYPD_Complaint_2022 %>%
 ```
 
 ```{r}
-# Victim_Race summary table 
-race_summary_tabel <- complaint_2022 %>% 
+# Victim race summary table 
+race_summary_table <- complaint_2022 %>% 
   group_by(VIC_RACE) %>% 
   summarise(Count = n()) %>% 
   arrange(desc(Count))
 
-gt(race_summary_tabel)
+gt(race_summary_table)
+
+# Level of offense summary table 
+# Level of offense: felony, misdemeanor, violatio
+offence_summary_table <- complaint_2022 %>% 
+  group_by(LAW_CAT_CD) %>% 
+  summarise(Count = n()) %>% 
+  arrange(desc(Count))
+gt(offence_summary_table)
 ```
 ```{r}
 # Daily trend (asian/pacific islander)
