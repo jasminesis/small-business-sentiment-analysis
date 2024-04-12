@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 # NYPD complaint data in year 2022, filtered by CMPLNT_FR_DT 
 # CMPLNT_FR_DT is the exact date of occurrence for the reported event. In other words, the starting date of the occurrence.
 library(readr)
-NYPD_Complaint_2022 <- read_csv("NYPD_Complaint_2022.csv")
+NYPD_Complaint_2022 <- read_csv("../crime_data/NYPD_Complaint_2022.csv")
 ```
 ```{r}
 # Load libraries
