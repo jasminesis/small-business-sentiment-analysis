@@ -33,6 +33,7 @@ library(plotly) # for interactive plot
 complaint_2022 <- NYPD_Complaint_2022 %>% 
   select(-c(PARKS_NM, TRANSIT_DISTRICT, HADEVELOPT, HOUSING_PSA, STATION_NAME)) %>% 
   filter(VIC_RACE != "UNKNOWN" & VIC_RACE!= "(null)")
+# write.csv(complaint_2022, "complaint_2022.csv")
 ```
 
 ```{r}
@@ -116,9 +117,6 @@ black_2022_monthly <- black_2022_daily %>%
 
 black22_monthly <- ggplotly(black_2022_monthly)
 black22_monthly
-```
-```{r}
-
 ```
 
 
