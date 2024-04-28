@@ -148,8 +148,18 @@ d |>
   geom_vline(xintercept = as.Date(paste(2021, 03, 01), "%Y %m %d"), color = "blue", lty = "dashed") +
   geom_density() +
   facet_wrap(vars(rating)) +
-  labs(title = "Ratings over time")
+  labs(title = "Ratings over time for asian and pizza restaurants", subtitle = "Red line indicates COVID lockdown, blue indicates Stop Asian Hate campaign")
 ```
+
+## did people get more unhappy with asian restaurants, and did they get less unhappy over the campaign 
+
+```{r TODO}
+# TODO: trying to answer whether the drop for asian restaurants is more or the same for pizza
+
+# proportion of 1 star reviews over all reviews
+# proportion of 5 star reviews over all reviews
+```
+
 
 ## Sentiment analysis
 
@@ -179,31 +189,21 @@ ggplot(mean_stm, aes(x = mean_rating, y = mean_sentiment)) +
 ## Plot restaurants by coordinates
 
 ```{r}
-library(ggmap)
-
-d_asian |> mutate(coordinates = fromJSON(coordinates))
-
-head(d_asian$coordinates) |> purrr:::map(fromJSON)
-
-# creating a sample data.frame with your lat/lon points
-lon <- c(-38.31,-35.5)
-lat <- c(40.96, 37.5)
-df <- as.data.frame(cbind(lon,lat))
-
-# getting the map
-mapgilbert <- get_map(location = c(lon = mean(df$lon), lat = mean(df$lat)), zoom = 4,
-                      maptype = "satellite", scale = 2)
-
-# plotting the map with some points on it
-ggmap(mapgilbert) +
-  geom_point(data = df, aes(x = lon, y = lat, fill = "red", alpha = 0.8), size = 5, shape = 21) +
-  guides(fill=FALSE, alpha=FALSE, size=FALSE)
-
+d_asian <- d_asian |>
+  rowwise() |>
+  mutate(
+    # coordinates had the wrong quote marks for fromJSON
+    # have to substitute
+    coordinates = gsub('["{*}"]', "", coordinates),
+    coordinates = gsub("'", '"', coordinates),
+    coordinates = paste0("{", coordinates, "}"),
+    lat = fromJSON(coordinates)$latitude,
+    lon = fromJSON(coordinates)$longitude
+  )
 ```
 
-## Average ratings and sentiment
-compare to pizza data
+# see if there's a spike in racist reviews?????
+BUT HOW!??!?!!?
 
-see if there's a spike in racist reviews
 
-did people get more unhappy with asian restaurants, and did they get less unhappy over the campaign 
+
