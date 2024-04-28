@@ -1,0 +1,96 @@
+---
+title: "classifying review data"
+format: html
+---
+
+# Load metadata and review data
+
+```{r}
+library(tidyverse)
+
+load("../review_data/metadata.RData")
+
+for (i in 1:2) {
+  filename <- paste0("../review_data/reviews/reviews_", i, ".RData")
+  print(filename)
+  load(filename)
+}
+load("../review_data/reviews/reviews_2.RData")
+
+d <- reviews_by_5_no1 |> bind_rows(reviews_by_5)
+d |> distinct()
+```
+
+```{r}
+small_businesses <- read_csv("../review_data/SBS_Certified_Business_List_20240309.csv")
+small_businesses$name <- small_businesses$Vendor_Formal_Name
+small_businesses <- small_businesses |> select(name, First_Name, Last_Name, Business_Description, Ethnicity)
+
+joined <- inner_join(small_businesses, metadata)
+# 67 common establishments between the two!
+
+asian_gmap_ids <- joined |>
+  filter(Ethnicity == "ASIAN") |>
+  pull(gmap_id)
+
+
+# 2,383 rows for ASIAN
+small_businesses |> filter(Ethnicity == "ASIAN")
+
+# d |> filter(gmap_id %in% asian_gmap_ids)
+
+asn_restaurants <- read_csv("../review_data/nyc_restaurant.csv")
+metadata <- inner_join(metadata, asn_restaurants, by = "name")
+# 595 common rows!!
+
+```
+
+## Make dates correct
+
+## Subset dates for a year before Stop Asian Hate (March 2021) and until the end of the data
+
+```{r}
+d <- d |>
+  mutate(
+    time = as.POSIXct(as.numeric(d$time) / 1000, origin = "1970-01-01", tz = "UTC"), month = format(time, "%m"), year = format(time, "%Y"),
+    rating = as.numeric(rating)
+  ) |>
+  filter(year %in% c(2020, 2021), gmap_id %in% asian_gmap_ids)
+dim(d)
+```
+
+## Seeing length of reviews
+
+```{r}
+d <- d |> mutate(length_text = nchar(text))
+
+ggplot(d, aes(x = rating, y = length_text)) +
+  geom_point()
+```
+
+
+```{r}
+review_text <- unnest_tokens(d, word, text)
+lexicon <- lexicon |> filter(!(word %in% c("envious", "enviously", "enviousness")))
+
+review_text <- review_text |>
+  group_by(time, gmap_id) |>
+  inner_join(lexicon, by = "word") |>
+  mutate(score = ifelse(sentiment == "negative", 0, 1))
+
+mean_stm <- review_text |>
+  group_by(time, gmap_id) |>
+  summarize(mean_sentiment = mean(score, na.rm = T), mean_rating = mean(rating))
+
+ggplot(mean_stm, aes(x = mean_rating, y = mean_sentiment)) +
+  geom_point()
+
+# sentiment aligns with rating?
+```
+
+
+## Subset categories to see which categories may be associated with asian owners
+
+
+
+## Build classifier to see 
