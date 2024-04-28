@@ -1,27 +1,42 @@
 ---
 title: "classifying review data"
-format: html
+format: pdf
+execute:
+  cache: true
 ---
 
-# Load metadata and review data
+# Load libraries
 
 ```{r}
 library(tidyverse)
+library(tidytext)
 
-load("../review_data/metadata.RData")
-
-for (i in 1:2) {
-  filename <- paste0("../review_data/reviews/reviews_", i, ".RData")
-  print(filename)
-  load(filename)
-}
-load("../review_data/reviews/reviews_2.RData")
-
-d <- reviews_by_5_no1 |> bind_rows(reviews_by_5)
-d |> distinct()
+setwd("~/Documents/GitHub/small-business-sentiment-analysis/")
 ```
 
-```{r}
+
+# Load metadata and review data
+
+```{r load_data}
+# loads metadata of all reviews
+load("../review_data/metadata.RData")
+
+load("../review_data/reviews/reviews_1.RData")
+d <- reviews_by_5_no1
+
+rm(reviews_by_5_no1)
+
+for (i in 2:5) {
+  filename <- paste0("../review_data/reviews/reviews_", i, ".RData")
+  # the reviews_2 to 20 files loads a variable called reviews_by_5, so you have to bind them immediately or it'll overwrite
+  load(filename)
+  d <- d |> bind_rows(reviews_by_5)
+}
+
+reviews <- d |> distinct()
+```
+
+```{r eval=F}
 small_businesses <- read_csv("../review_data/SBS_Certified_Business_List_20240309.csv")
 small_businesses$name <- small_businesses$Vendor_Formal_Name
 small_businesses <- small_businesses |> select(name, First_Name, Last_Name, Business_Description, Ethnicity)
@@ -33,64 +48,162 @@ asian_gmap_ids <- joined |>
   filter(Ethnicity == "ASIAN") |>
   pull(gmap_id)
 
-
 # 2,383 rows for ASIAN
 small_businesses |> filter(Ethnicity == "ASIAN")
 
 # d |> filter(gmap_id %in% asian_gmap_ids)
-
-asn_restaurants <- read_csv("../review_data/nyc_restaurant.csv")
-metadata <- inner_join(metadata, asn_restaurants, by = "name")
-# 595 common rows!!
-
 ```
-
-## Make dates correct
-
-## Subset dates for a year before Stop Asian Hate (March 2021) and until the end of the data
 
 ```{r}
-d <- d |>
+# join review and cuisines to get smaller list of only asian restaurants
+asn_restaurants <- read_csv("../review_data/nyc_asian_restaurant.csv")
+asn_restaurants <- asn_restaurants |> select(name, alias, categories, coordinates, location)
+
+asian <- inner_join(metadata, asn_restaurants, by = "name")
+# 595 common rows!! between all review metadata and asian nyc restaurants
+asian <- asian |> distinct(gmap_id, .keep_all = TRUE)
+# 440 rows after only keeping the first by name
+# 533 rows after only keeping the first by gmap_id
+
+d_asian <- inner_join(reviews, asian, by = "gmap_id") |>
+  # 31,040 reviews before filtering by year
   mutate(
-    time = as.POSIXct(as.numeric(d$time) / 1000, origin = "1970-01-01", tz = "UTC"), month = format(time, "%m"), year = format(time, "%Y"),
+    time = as.POSIXct(as.numeric(time) / 1000, origin = "1970-01-01", tz = "UTC"), month = format(time, "%m"), year = format(time, "%Y"),
+    rating = as.numeric(rating)
+  ) |> filter(year %in% c("2019", "2020", "2021"))
+# 18,531 for 2019, 2020 and 2021
+# save(d_asian, file = "joined_reviews_1_5.RData")
+# load("../review_data/joined_reviews_1_5.RData")
+
+
+# NOTE: SOPHIA LOOK HERE
+pizza_restaurants <- read_csv("../review_data/nyc_pizza_restaurant.csv") |> select(name, alias, categories, coordinates, location)
+pizza <- inner_join(metadata, pizza_restaurants, by = "name") |> distinct(gmap_id, .keep_all = TRUE)
+d_pizza <- inner_join(pizza, reviews, by = "gmap_id") |>
+  mutate(
+    time = as.POSIXct(as.numeric(time) / 1000, origin = "1970-01-01", tz = "UTC"), month = format(time, "%m"), year = format(time, "%Y"),
     rating = as.numeric(rating)
   ) |>
-  filter(year %in% c(2020, 2021), gmap_id %in% asian_gmap_ids)
-dim(d)
+  filter(year %in% c("2019", "2020", "2021"))
+# save(d_pizza, file = "../review_data/d_pizza_joined_1_5.RData")
 ```
+
 
 ## Seeing length of reviews
 
-```{r}
-d <- d |> mutate(length_text = nchar(text))
+```{r exploratory_data_viz}
+ggplot(d_asian, aes(x = time, y = rating)) +
+  geom_jitter() +
+  labs(x = "date", title = "Ratings vs date for Asian restaurants")
 
-ggplot(d, aes(x = rating, y = length_text)) +
-  geom_point()
+d_asian |>
+  group_by(gmap_id, month, year) |>
+  summarize(mean_rating = mean(rating)) |>
+  rowwise() |>
+  mutate(date = as.Date(paste(year, month, 01), "%Y %m %d")) |>
+  ggplot(aes(x = date, y = mean_rating, color = gmap_id)) +
+  geom_line() +
+  theme(legend.position = "none") +
+  labs(title = "Average rating in a month for each Asian restaurant")
+# messy plot - no real trend
+
+d_asian |>
+  group_by(gmap_id, month, year) |>
+  mutate(date = as.Date(paste(year, month, 01), "%Y %m %d")) |>
+  ggplot(aes(x = date)) +
+  geom_density() +
+  geom_vline(xintercept = as.Date(paste(2020, 03, 01), "%Y %m %d"), color = "red", lty = "dashed") +
+  geom_vline(xintercept = as.Date(paste(2021, 03, 01), "%Y %m %d"), color = "blue", lty = "dashed") +
+  labs(title = "Total count of reviews for Asian restaurants over time")
+
+d_asian |>
+  group_by(gmap_id, month, year, rating) |>
+  mutate(date = as.Date(paste(year, month, 01), "%Y %m %d")) |>
+  ggplot(aes(x = date)) +
+  geom_vline(xintercept = as.Date(paste(2020, 03, 01), "%Y %m %d"), color = "red", lty = "dashed") +
+  geom_vline(xintercept = as.Date(paste(2021, 03, 01), "%Y %m %d"), color = "blue", lty = "dashed") +
+  geom_density() +
+  facet_wrap(vars(rating)) +
+  labs(title = "Ratings over time for Asian restaurants", subtitle = "Red line indicates COVID lockdown, blue indicates Stop Asian Hate campaign")
+
+d_pizza |>
+  group_by(gmap_id, month, year, rating) |>
+  mutate(date = as.Date(paste(year, month, 01), "%Y %m %d")) |>
+  ggplot(aes(x = date)) +
+  geom_vline(xintercept = as.Date(paste(2020, 03, 01), "%Y %m %d"), color = "red", lty = "dashed") +
+  geom_vline(xintercept = as.Date(paste(2021, 03, 01), "%Y %m %d"), color = "blue", lty = "dashed") +
+  geom_density() +
+  facet_wrap(vars(rating)) +
+  labs(title = "Ratings over time for pizza restaurants", subtitle = "Red line indicates COVID lockdown, blue indicates Stop Asian Hate campaign")
+
+
+d <- bind_rows(d_asian, d_pizza) |>
+  mutate(type = rep(c("asian", "pizza"), times = c(nrow(d_asian), nrow(d_pizza)))) |>
+  mutate(date = as.Date(paste(year, month, 01), "%Y %m %d")) |>
+  group_by(gmap_id, month, year, rating)
+
+d |>
+  ggplot(aes(x = date, color = type)) +
+  geom_vline(xintercept = as.Date(paste(2020, 03, 01), "%Y %m %d"), color = "red", lty = "dashed") +
+  geom_vline(xintercept = as.Date(paste(2021, 03, 01), "%Y %m %d"), color = "blue", lty = "dashed") +
+  geom_density() +
+  facet_wrap(vars(rating)) +
+  labs(title = "Ratings over time")
 ```
 
+## Sentiment analysis
 
-```{r}
-review_text <- unnest_tokens(d, word, text)
+```{r sentiment_analysis, eval=F}
+review_text <- unnest_tokens(d_asian, word, text)
+
+lexicon <- tidytext::get_sentiments("bing")
+# remove the double rows for this word so that inner_join works
 lexicon <- lexicon |> filter(!(word %in% c("envious", "enviously", "enviousness")))
 
-review_text <- review_text |>
+review_stm <- review_text |>
   group_by(time, gmap_id) |>
   inner_join(lexicon, by = "word") |>
   mutate(score = ifelse(sentiment == "negative", 0, 1))
 
-mean_stm <- review_text |>
+mean_stm <- review_stm |>
   group_by(time, gmap_id) |>
   summarize(mean_sentiment = mean(score, na.rm = T), mean_rating = mean(rating))
 
 ggplot(mean_stm, aes(x = mean_rating, y = mean_sentiment)) +
   geom_point()
-
-# sentiment aligns with rating?
+# sentiment aligns with rating? not really
+# Doesn't show anything interesting
 ```
 
 
-## Subset categories to see which categories may be associated with asian owners
+## Plot restaurants by coordinates
 
+```{r}
+library(ggmap)
 
+d_asian |> mutate(coordinates = fromJSON(coordinates))
 
-## Build classifier to see 
+head(d_asian$coordinates) |> purrr:::map(fromJSON)
+
+# creating a sample data.frame with your lat/lon points
+lon <- c(-38.31,-35.5)
+lat <- c(40.96, 37.5)
+df <- as.data.frame(cbind(lon,lat))
+
+# getting the map
+mapgilbert <- get_map(location = c(lon = mean(df$lon), lat = mean(df$lat)), zoom = 4,
+                      maptype = "satellite", scale = 2)
+
+# plotting the map with some points on it
+ggmap(mapgilbert) +
+  geom_point(data = df, aes(x = lon, y = lat, fill = "red", alpha = 0.8), size = 5, shape = 21) +
+  guides(fill=FALSE, alpha=FALSE, size=FALSE)
+
+```
+
+## Average ratings and sentiment
+compare to pizza data
+
+see if there's a spike in racist reviews
+
+did people get more unhappy with asian restaurants, and did they get less unhappy over the campaign 
