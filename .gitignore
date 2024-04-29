@@ -1,5 +1,9 @@
+literature/
+review_data/
+.DS_Store
+
 # Keep json files out of repo
-.json
+*.json
 
 # History files
 .Rhistory

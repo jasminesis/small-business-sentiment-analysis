@@ -72,8 +72,8 @@ d_asian <- inner_join(reviews, asian, by = "gmap_id") |>
     rating = as.numeric(rating)
   ) |> filter(year %in% c("2019", "2020", "2021"))
 # 18,531 for 2019, 2020 and 2021
-# save(d_asian, file = "joined_reviews_1_5.RData")
-# load("../review_data/joined_reviews_1_5.RData")
+# save(d_asian, file = "d_asian_1_5.RData")
+# load("../review_data/d_asian_1_5.RData")
 
 
 # NOTE: SOPHIA LOOK HERE
@@ -85,7 +85,7 @@ d_pizza <- inner_join(pizza, reviews, by = "gmap_id") |>
     rating = as.numeric(rating)
   ) |>
   filter(year %in% c("2019", "2020", "2021"))
-# save(d_pizza, file = "../review_data/d_pizza_joined_1_5.RData")
+# save(d_pizza, file = "../review_data/d_pizza_1_5.RData")
 ```
 
 
