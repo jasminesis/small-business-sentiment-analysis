@@ -1,5 +1,8 @@
 literature/
 review_data/
+JS_reviews2_cache/
+JS_reviews2_files/
+google-api-key
 .DS_Store
 
 # Keep json files out of repo
