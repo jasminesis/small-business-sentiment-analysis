@@ -46,6 +46,8 @@ relative_results - relative businesses recommended by Google
 url - URL of the business
 
 
+# Extract columns from metadata
+
 ```{r eval=F}
 meta_file <- "../review_data/meta-New_York.json"
 meta_json <- purrr::map(readLines(meta_file), jsonlite::fromJSON, .progress = "loading metadata")
@@ -62,6 +64,8 @@ metadata <- data.frame(matrix(unlist(l), ncol = 4, byrow = TRUE))
 colnames(metadata) <- c("name", "gmap_id", "address", "category")
 metadata <- tibble(metadata) |> distinct()
 ```
+
+# Extract columns from review data
 
 ```{r eval=F}
 filepaths <- list.files(path = "../review_data/review_data_split")
@@ -83,3 +87,23 @@ foreach(i = seq(1, 100, by = 5)) %do% {
 }
 ```
 
+# Filter out only 2019, 2020 and 2021 reviews
+
+```{r eval=F}
+reviews <- foreach(i = seq(1, 20), .combine = "rbind") %do% {
+  filename <- paste0("../review_data/reviews/reviews_", i, ".RData")
+  # the reviews_2 to 20 files loads a variable called reviews_by_5, so you have to bind them immediately or it'll overwrite
+  load(filename)
+  reviews_by_5 <- reviews_by_5 |>
+    distinct() |>
+    mutate(
+      time = as.POSIXct(as.numeric(time) / 1000, origin = "1970-01-01", tz = "UTC"),
+      month = format(time, "%m"),
+      year = format(time, "%Y"),
+      rating = as.numeric(rating)
+    ) |>
+    filter(year %in% c("2019", "2020", "2021"))
+  reviews_by_5
+}
+save(reviews, file = "../review_data/reviews19_20_21.RData")
+```
