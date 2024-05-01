@@ -8,6 +8,8 @@ Data Driven Methods of Policy Evaluation group project
 
 `review_data/`
 
+- `reviews19_20_21.RData` - all restaurant reviews for 2019, 2020 and 2021
+- `restaurant_locations_by_type.csv` - asian, pizza and mexican restaurants with latitude, longitude and zip code (for plotting)
 - `reviews_with_sentiment.csv` - asian and pizza restaurants with sentiment (polarity and subjectivity)
 - `d_asian_1_5.RData` - contains `d_asian`, which is `reviews_1.RData` to `reviews_5.RData`, joined with `nyc_asian_restaurants.csv` (31,040 rows)
 - `d_pizza_1_5.RData` - contains `d_pizza`, which is `reviews_1.RData` to `reviews_5.RData`, joined with `nyc_pizza_restaurants.csv`
