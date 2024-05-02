@@ -12,6 +12,7 @@ library(tidyverse)
 library(tidytext)
 library(jsonlite)
 library(ggmap)
+library(geomtextpath) # for geom_textvline
 
 setwd("~/Documents/GitHub/small-business-sentiment-analysis/scripts")
 
@@ -28,6 +29,9 @@ load("../review_data/metadata.RData")
 
 # load `reviews` which has all the 2019, 2020 and 2021 reviews
 load("../review_data/reviews19_20_21.RData")
+
+# load `combined_reviews` which has all the 2019, 2020 and 2021 reviews for Asian, Mexican, and pizza places
+load("../review_data/combined_reviews.RData")
 
 reviews_with_sentiment <- read_csv("../review_data/reviews_with_sentiment.csv")
 ```
@@ -54,7 +58,7 @@ small_businesses |> filter(Ethnicity == "ASIAN")
 
 # Combine and select asian, mexican and pizza restaurants
 
-```{r}
+```{r eval=F}
 # join review and cuisines to get smaller list of only asian restaurants
 asian <- read_csv("../review_data/nyc_asian_restaurant.csv") |>
   select(name, alias, categories, coordinates, location)
@@ -85,71 +89,87 @@ d_mex <- inner_join(reviews, mex, by = "gmap_id") |>
   bind_cols(type = "mexican")
 
 combined_reviews <- bind_rows(d_asian, d_pizza, d_mex) |>
-  mutate(date = as.Date(paste(year, month, 01), "%Y %m %d"))
-
+  mutate(date = as.Date(paste(year, month, 01), "%Y %m %d")) |>
+  filter(time <= as.Date(paste(2021, 06, 01), "%Y %m %d"))
 # save(combined_reviews, file = "../review_data/combined_reviews.RData")
 ```
 
 ## Plotting
 
 ```{r exploratory_data_viz}
-covid_start <- as.Date(paste(2020, 03, 01), "%Y %m %d")
-stopah_start <- as.Date(paste(2021, 03, 01), "%Y %m %d")
+covid_start <- as.Date(paste(2020, 03, 15), "%Y %m %d")
+stopah_start <- as.Date(paste(2021, 03, 11), "%Y %m %d")
 
 ggplot(d_asian, aes(x = time, y = rating)) +
   geom_jitter() +
   labs(x = "date", title = "Ratings vs date for Asian restaurants")
 
-combined_reviews |>
-  filter(type == "asian") |>
-  group_by(gmap_id, month, year) |>
-  summarize(mean_rating = mean(rating)) |>
-  mutate(date = as.Date(paste(year, month, 01), "%Y %m %d")) |>
-  ggplot(aes(x = date, y = mean_rating, color = gmap_id)) +
-  geom_line() +
-  theme(legend.position = "none") +
-  labs(title = "Average rating in a month for each Asian restaurant")
+# combined_reviews |>
+#   filter(type == "asian") |>
+#   group_by(gmap_id, month, year) |>
+#   summarize(mean_rating = mean(rating)) |>
+#   mutate(date = as.Date(paste(year, month, 01), "%Y %m %d")) |>
+#   ggplot(aes(x = date, y = mean_rating, color = gmap_id)) +
+#   geom_line()+
+#   theme(legend.position = "none") +
+#   labs(title = "Average rating in a month for each Asian restaurant")
 # messy plot - no real trend
 
 combined_reviews |>
-  group_by(gmap_id, month, year) |>
-  ggplot(aes(x = date)) +
-  geom_histogram(color = "white", fill = "darkslategray") +
-  geom_vline(xintercept = covid_start, color = "red", lty = "dashed") +
-  geom_vline(xintercept = stopah_start, color = "blue", lty = "dashed") +
-  labs(title = "Total count of reviews for all restaurants over time")
+  count(date) |>
+  ggplot(aes(x = date, y = n)) +
+  geom_bar(stat = "identity", fill = "darkslategray") +
+  geom_textvline(label = "COVID-19", vjust = 1.5, hjust = 1, size = 3, xintercept = covid_start, color = "indianred2", lty = "dashed") +
+  geom_textvline(label = "Stop AAPI Hate", vjust = 1.5, hjust = 1, size = 3, xintercept = stopah_start, color = "dodgerblue2", lty = "dashed") +
+  labs(title = "Total count of reviews for all restaurants", x = "Date", y = "Count")
 
-d_asian |>
-  group_by(gmap_id, month, year, rating) |>
-  mutate(date = as.Date(paste(year, month, 01), "%Y %m %d")) |>
-  ggplot(aes(x = date)) +
-  geom_vline(xintercept = covid_start, color = "red", lty = "dashed") +
-  geom_vline(xintercept = stopah_start, color = "blue", lty = "dashed") +
-  geom_density() +
-  facet_wrap(vars(rating)) +
-  labs(title = "Ratings over time for Asian restaurants", subtitle = "Red line indicates COVID lockdown, blue indicates Stop Asian Hate campaign")
+# combined_reviews |>
+#   filter(type == "asian") |>
+#   group_by(gmap_id, month, year, rating) |>
+#   mutate(date = as.Date(paste(year, month, 01), "%Y %m %d")) |>
+#   ggplot(aes(x = date)) +
+#   geom_vline(xintercept = covid_start, color = "indianred2", lty = "dashed") +
+#   geom_vline(xintercept = stopah_start, color = "dodgerblue2", lty = "dashed") +
+#   geom_density() +
+#   facet_wrap(vars(rating)) +
+#   labs(title = "Ratings over time for Asian restaurants")
 
-d_pizza |>
-  group_by(gmap_id, month, year, rating) |>
-  mutate(date = as.Date(paste(year, month, 01), "%Y %m %d")) |>
-  ggplot(aes(x = date)) +
-  geom_vline(xintercept = covid_start, color = "red", lty = "dashed") +
-  geom_vline(xintercept = stopah_start, color = "blue", lty = "dashed") +
-  geom_density() +
-  facet_wrap(vars(rating)) +
-  labs(title = "Ratings over time for pizza restaurants", subtitle = "Red line indicates COVID lockdown, blue indicates Stop Asian Hate campaign")
+# combined_reviews |>
+#   filter(type == "pizza") |>
+#   group_by(gmap_id, month, year, rating) |>
+#   mutate(date = as.Date(paste(year, month, 01), "%Y %m %d")) |>
+#   ggplot(aes(x = date)) +
+#   geom_textvline(xintercept = covid_start, color = "indianred2", lty = "dashed", label = "COVID-19") +
+#   geom_vline(xintercept = stopah_start, color = "dodgerblue2", lty = "dashed") +
+#   geom_density() +
+#   facet_wrap(vars(rating)) +
+#   labs(title = "Ratings over time for pizza restaurants")
 
 combined_reviews |>
-  filter(type != "pizza") |>
+  mutate(type = factor(type, levels = c("pizza", "mexican", "asian"))) |>
   mutate(date = as.Date(paste(year, month, 01), "%Y %m %d")) |>
-  ggplot(aes(x = date, color = type)) +
-  geom_density() +
-  geom_vline(xintercept = covid_start, color = "red", lty = "dashed") +
-  geom_vline(xintercept = stopah_start, color = "blue", lty = "dashed") +
+  ggplot(aes(x = date, fill = type)) +
+  geom_density(color = "gray95", alpha = 0.7) +
+  geom_vline(xintercept = covid_start, color = "indianred2", lty = "dashed") +
+  geom_vline(xintercept = stopah_start, color = "dodgerblue2", lty = "dashed") +
   facet_wrap(vars(rating)) +
-  labs(title = "Ratings over time for Asian and Mexican restaurants")
-```
+  labs(title = "Ratings over time for Asian and Mexican restaurants", fill = "Cuisine", x = "Date") +
+  theme(axis.text.x = element_blank())
 
+combined_reviews |>
+  mutate(type = factor(str_to_title(type), levels = c("Asian", "Mexican", "Pizza"))) |>
+  group_by(type, month, year) |>
+  summarise(mean_rating = mean(rating)) |>
+  mutate(date = as.Date(paste(year, month, 01), "%Y %m %d")) |>
+  ggplot(aes(x = date, y = mean_rating, color = type)) +
+  geom_line() +
+  geom_point() +
+  scale_color_manual(values = c("lightpink", "steelblue", "darkseagreen")) +
+  geom_vline(xintercept = covid_start, color = "indianred2", lty = "dashed") +
+  geom_vline(xintercept = stopah_start, color = "dodgerblue2", lty = "dashed") +
+  labs(title = "Average ratings over time for Asian, Mexican and pizza restaurants", color = "Cuisine", x = "Date", y = "Mean rating")
+ggsave("../figures/average_ratings.png", width = 8, height = 5)
+```
 
 ## did people get more unhappy with asian restaurants, and did they get less unhappy over the campaign 
 
@@ -158,6 +178,7 @@ combined_reviews |>
 # proportion of 1 star reviews over all reviews
 combined_reviews |>
   filter(type == "asian" | type == "mexican") |>
+  # filter(type == "mexican") |>
   count(rating, date, type) |>
   group_by(date, type) |>
   mutate(prop = prop.table(n)) |>
@@ -167,6 +188,7 @@ combined_reviews |>
   geom_vline(xintercept = covid_start, color = "red", lty = "dashed") +
   geom_vline(xintercept = stopah_start, color = "blue", lty = "dashed") +
   geom_point(aes(x = date, y = prop, color = type)) +
+  # geom_point(aes(x = date, y = prop, color = as.factor(rating))) +
   labs(title = "Proportion of 1 star reviews over all reviews", x = "Date", y = "Proportion")
 
 combined_reviews |>
@@ -281,5 +303,45 @@ d |>
   select(name, property, value) |>
   ggplot() +
   geom_density(aes(value, color = property)) +
-  labs(title = "Scaled average polarity and\nsubjectivity for Asian restaurants")
+  labs(title = "Average polarity and\nsubjectivity for Asian restaurants")
 ```
+
+- facet by review score
+
+If doing a nested model, certain restaurants are gonna have an outsized impact - might wanna have random intercepts
+
+Conditioned on similar review scores, does polarity and subjectivity change? 
+
+
+```{r gam}
+library(mgcv)
+
+covid_start <- as_date("2020-03-15")
+
+asn_sentiment <- read_csv("../sentiment_data/asian_sentiment.csv") |> mutate(
+  prepost_covid = as_date(time) - covid_start,
+  rating = as.numeric(rating),
+  prepost_covid = as.numeric(prepost_covid)
+)
+
+# gams_asn <- mgcv::gam(polarity ~ 1 + s(rating, prepost_covid), data = asn_sentiment)
+
+gams_asn <- mgcv::gam(polarity ~ 1 + te(rating, prepost_covid, k = c(4, 10)), data = asn_sentiment)
+# setting c(4, 10) means that it fits the points but is still smooth
+# really flat ones was because there were only 2 (ish?) knots allowed
+# now it allows 4 knots for rating
+# now it allows 10 knots for date - stitching together 10 or 11 cubic functions for date
+# why use `te()`? because it's one that allows for interaction between two factors
+# `s()` is for just one variable
+
+new_dat <- data.frame(prepost_covid = rep(-450:550, each = 5), rating = 1:5)
+new_dat$pred <- predict(gams_asn, newdata = new_dat)
+
+ggplot(new_dat, aes(x = prepost_covid, y = pred, color = as.factor(rating))) +
+  geom_line()
+
+ggplot(asn_sentiment, aes(x = as.factor(rating), y = polarity, fill = as.factor(rating))) +
+  geom_violin()
+```
+
+GAM allows us to see differences in sentiment that have already accounted for rating.
