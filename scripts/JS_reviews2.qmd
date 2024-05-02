@@ -14,13 +14,10 @@ library(jsonlite)
 library(ggmap)
 library(geomtextpath) # for geom_textvline
 
-<<<<<<< HEAD
-=======
 setwd("~/Documents/GitHub/small-business-sentiment-analysis/scripts")
 
 source("ggplot_settings.R")
 theme_set(theme_custom())
->>>>>>> 5745bf79a68d1f9a43ca08446f82d8ca26749232
 ```
 
 
@@ -30,26 +27,16 @@ theme_set(theme_custom())
 # loads `metadata` which is metadata of all reviews
 load("../review_data/metadata.RData")
 
-<<<<<<< HEAD
-d <- load("../review_data/reviews_1.RData")
-# d <- reviews_by_5_no1
-# 
-# rm(reviews_by_5_no1)
-=======
 # load `reviews` which has all the 2019, 2020 and 2021 reviews
 load("../review_data/reviews19_20_21.RData")
 
 # load `combined_reviews` which has all the 2019, 2020 and 2021 reviews for Asian, Mexican, and pizza places
 load("../review_data/combined_reviews.RData")
->>>>>>> 5745bf79a68d1f9a43ca08446f82d8ca26749232
 
 reviews_with_sentiment <- read_csv("../review_data/reviews_with_sentiment.csv")
 ```
 
-<<<<<<< HEAD
-=======
 # Combine with minority-owned business data (not just restaurants)
->>>>>>> 5745bf79a68d1f9a43ca08446f82d8ca26749232
 
 ```{r eval=F}
 small_businesses <- read_csv("../review_data/SBS_Certified_Business_List_20240309.csv")
@@ -132,8 +119,14 @@ combined_reviews |>
   count(date) |>
   ggplot(aes(x = date, y = n)) +
   geom_bar(stat = "identity", fill = "darkslategray") +
-  geom_textvline(label = "COVID-19", vjust = 1.5, hjust = 1, size = 3, xintercept = covid_start, color = "indianred2", lty = "dashed") +
-  geom_textvline(label = "Stop AAPI Hate", vjust = 1.5, hjust = 1, size = 3, xintercept = stopah_start, color = "dodgerblue2", lty = "dashed") +
+  geom_textvline(
+    label = "COVID-19", vjust = 1.5, hjust = 1, size = 3,
+    xintercept = covid_start, color = "indianred2", lty = "dashed"
+  ) +
+  geom_textvline(
+    label = "Stop AAPI Hate", vjust = 1.5, hjust = 1, size = 3,
+    xintercept = stopah_start, color = "dodgerblue2", lty = "dashed"
+  ) +
   labs(title = "Total count of reviews for all restaurants", x = "Date", y = "Count")
 
 # combined_reviews |>
@@ -180,29 +173,52 @@ combined_reviews |>
   scale_color_manual(values = c("lightpink", "steelblue", "darkseagreen")) +
   geom_vline(xintercept = covid_start, color = "indianred2", lty = "dashed") +
   geom_vline(xintercept = stopah_start, color = "dodgerblue2", lty = "dashed") +
-  labs(title = "Average ratings over time for Asian, Mexican and pizza restaurants", color = "Cuisine", x = "Date", y = "Mean rating")
+  labs(title = "Average ratings over time for Asian, Mexican and pizza restaurants", color = "Cuisine", x = "Date", y = "Average rating")
 ggsave("../figures/average_ratings.png", width = 8, height = 5)
 ```
 
 ## did people get more unhappy with asian restaurants, and did they get less unhappy over the campaign 
 
 ```{r}
+# count of all reviews - see if people stopped visiting asian restaurants
+combined_reviews |>
+  mutate(type = factor(str_to_title(type), levels = c("Asian", "Mexican", "Pizza"))) |>
+  count(date, type) |>
+  ggplot(aes(x = date, y = n, fill = type)) +
+  geom_textvline(
+    label = "COVID-19", vjust = 1.5, hjust = 1, size = 3,
+    xintercept = covid_start, color = "indianred2", lty = "dashed"
+  ) +
+  geom_textvline(
+    label = "Stop AAPI Hate", vjust = 1.5, hjust = 1, size = 3,
+    xintercept = stopah_start, color = "dodgerblue2", lty = "dashed"
+  ) +
+  scale_fill_manual(values = c("lightpink", "steelblue", "darkseagreen")) +
+  geom_bar(stat = "identity") +
+  labs(title = "Count of all reviews by cuisine", fill = "Cuisine", x = "Date", y = "Count")
+ggsave("../figures/count_by_cuisine.png", width = 8, height = 5)
+```
+
+
+```{r}
 # trying to answer whether the drop for asian restaurants is more or the same for pizza/mexican
 # proportion of 1 star reviews over all reviews
 combined_reviews |>
-  filter(type == "asian" | type == "mexican") |>
-  # filter(type == "mexican") |>
+  mutate(type = factor(str_to_title(type), levels = c("Asian", "Mexican", "Pizza"))) |>
   count(rating, date, type) |>
   group_by(date, type) |>
   mutate(prop = prop.table(n)) |>
   arrange(date) |>
   filter(rating == 1) |>
-  ggplot() +
-  geom_vline(xintercept = covid_start, color = "red", lty = "dashed") +
-  geom_vline(xintercept = stopah_start, color = "blue", lty = "dashed") +
-  geom_point(aes(x = date, y = prop, color = type)) +
-  # geom_point(aes(x = date, y = prop, color = as.factor(rating))) +
-  labs(title = "Proportion of 1 star reviews over all reviews", x = "Date", y = "Proportion")
+  ggplot(aes(x = date, y = prop, color = type)) +
+  geom_vline(xintercept = covid_start, color = "indianred2", lty = "dashed") +
+  geom_vline(xintercept = stopah_start, color = "dodgerblue2", lty = "dashed") +
+  scale_color_manual(values = c("lightpink", "steelblue", "darkseagreen")) +
+  geom_point() +
+  geom_line() +
+  labs(title = "Proportion of 1 star reviews over all reviews", color = "Cuisine", x = "Date", y = "Proportion")
+ggsave("../figures/proportion_1_star.png", width = 8, height = 5)
+
 
 combined_reviews |>
   filter(type == "asian", month == "04", year == "2020", rating < 3, !is.na(text)) |>
@@ -287,8 +303,7 @@ pd <- restaurant_locations |>
 nyc_map_12 + geom_point(data = pd, aes(x = lon, y = lat, size = n), show.legend = FALSE, col = alpha("hotpink4", 0.4)) + labs(title = "Geographic location of Pizza restaurants")
 ```
 
-# see if there's a spike in racist reviews?????
-BUT HOW!??!?!!
+# A spike in racist reviews?
 
 ## Work with polarity and subjectivity
 
@@ -358,3 +373,24 @@ ggplot(asn_sentiment, aes(x = as.factor(rating), y = polarity, fill = as.factor(
 ```
 
 GAM allows us to see differences in sentiment that have already accounted for rating.
+
+```{r}
+# pull out low and high polarity reviews
+asn_sentiment <- read_csv("../sentiment_data/asian_sentiment.csv") |>
+  select(-1, -2) |>
+  mutate(type = "asian")
+mex_sentiment <- read_csv("../sentiment_data/mexican_sentiment.csv") |>
+  select(-1, -2) |>
+  mutate(type = "mexican")
+pizza_sentiment <- read_csv("../sentiment_data/pizza_sentiment.csv") |>
+  select(-1, -2) |>
+  mutate(type = "pizza")
+
+combined_sentiments <- bind_rows(asn_sentiment, mex_sentiment, pizza_sentiment)
+
+combined_sentiments |>filter(polarity == -1) |> 
+  filter(type == "asian") |>
+  slice_sample(n = 3) |>
+  pull(text)
+```
+
