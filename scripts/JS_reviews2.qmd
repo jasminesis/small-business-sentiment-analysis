@@ -11,7 +11,6 @@ execute:
 library(tidyverse)
 library(tidytext)
 
-setwd("~/Documents/GitHub/small-business-sentiment-analysis/")
 ```
 
 
@@ -21,10 +20,10 @@ setwd("~/Documents/GitHub/small-business-sentiment-analysis/")
 # loads metadata of all reviews
 load("../review_data/metadata.RData")
 
-load("../review_data/reviews/reviews_1.RData")
-d <- reviews_by_5_no1
-
-rm(reviews_by_5_no1)
+d <- load("../review_data/reviews_1.RData")
+# d <- reviews_by_5_no1
+# 
+# rm(reviews_by_5_no1)
 
 for (i in 2:5) {
   filename <- paste0("../review_data/reviews/reviews_", i, ".RData")
@@ -35,6 +34,7 @@ for (i in 2:5) {
 
 reviews <- d |> distinct()
 ```
+
 
 ```{r eval=F}
 small_businesses <- read_csv("../review_data/SBS_Certified_Business_List_20240309.csv")
