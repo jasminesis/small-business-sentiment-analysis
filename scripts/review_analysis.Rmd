@@ -7,6 +7,8 @@ output: pdf_document
 
 ```{r}
 library("tidyverse")
+source("ggplot_settings.R")
+theme_set(theme_custom())
 ```
 
 ```{r setup, include=FALSE}
@@ -227,7 +229,7 @@ ggplot(mexican_avg_sentiment, aes(x = date, y = as.numeric(polarity))) +
 
 ```{r}
 # REMOVING LAST 3 MONTHS OF 2021 DATA
-combined_reviews <- get(load("combined_reviews.RData"))
+combined_reviews <- get(load("../review_data/combined_reviews.RData"))
 combined_reviews <-
   bind_rows(asian_sentiment, mexican_sentiment, pizza_sentiment) |>
   mutate(date = as.Date(paste(year, month, 01), "%Y %m %d")) |>
@@ -245,6 +247,7 @@ combined_reviews |>
   group_by(type, month, year) |>
   summarise(mean_polarity = mean(polarity)) |>
   mutate(date = as.Date(paste(year, month, 01), "%Y %m %d")) |>
+  filter(date <= as.Date(paste(2021, 06, 01), "%Y %m %d")) |>
   ggplot(aes(x = date, y = mean_polarity, color = type)) +
   geom_line() +
   geom_point() +
@@ -252,8 +255,9 @@ combined_reviews |>
   geom_vline(xintercept = covid_start, color = "indianred2", lty = "dashed") +
   geom_vline(xintercept = stopah_start, color = "dodgerblue2", lty = "dashed") +
   # facet_wrap(vars(mean_rating)) +
-  labs(title = "Average polarity over time for Asian, Mexican and pizza restaurants", color = "Cuisine", x = "Date", y = "Mean rating") +
-  theme_minimal()
+  labs(title = "Average polarity over time for Asian, Mexican and pizza restaurants", color = "Cuisine", x = "Date", y = "Average polarity")
+
+# ggsave(filename = "../figures/average_polarity.png", width = 8, height = 5)
 ```
 
 
@@ -364,9 +368,10 @@ ggplot(data = one_star_df, aes(x = date_lub, y = polarity, color = type)) +
   scale_color_manual(values = c("lightpink", "steelblue", "darkseagreen")) +
   geom_vline(xintercept = 0, color = "indianred2", lty = "dashed") +
   geom_vline(xintercept = 370, color = "dodgerblue2", lty = "dashed") +
-  labs(title = "Polarity over time for 1 star reviews", color = "Cuisine", x = "Days from US COVID Lockdown", y = "Polarity") +
+  labs(title = "Polarity over time for 1 star reviews", color = "Cuisine", x = "Days from US COVID-19 Lockdown", y = "Polarity") +
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5))
+# ggsave(filename="",width = 8, height=5)
 ```
 
 
