@@ -281,26 +281,44 @@ pd_asian <- restaurant_locations |>
   filter(type == "asian") |>
   group_by(lat, lon) |>
   summarize(n = n())
+
 pd_asian_zip <- restaurant_locations |>
   filter(type == "asian") |>
   group_by(zipcode) |>
   summarize(lat = mean(lat), lon = mean(lon), n = n())
+```
 
+```{r maps}
+theme_map <- function() {
+  theme_minimal() + theme(
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    plot.background = element_rect(
+      fill = "white"
+    )
+  )
+}
 nyc_map_12 + geom_point(
   data = pd_asian, aes(x = lon, y = lat, size = n),
-  show.legend = T, col = alpha("hotpink4", 0.4)
-) + labs(title = "Geographic location of Asian restaurants")
+  show.legend = T, col = alpha("hotpink", 0.4)
+) + labs(title = "Geographic location of Asian restaurants") + 
+  theme_map()
+ggsave(filename = "../figures/map_asian.png", width = 5, height = 5)
+
 nyc_map_12 + geom_point(
   data = pd_asian_zip, aes(x = lon, y = lat, size = n),
-  show.legend = T, col = alpha("hotpink4", 0.4)
-) + labs(title = "Geographic location of Asian restaurants", subtitle = "Clustered by zip code")
+  show.legend = TRUE, col = alpha("hotpink", 0.4)
+) + labs(title = "Geographic location of Asian restaurants", subtitle = "Clustered by zip code") + theme_map()
 
 pd <- restaurant_locations |>
   filter(type == "pizza") |>
   group_by(lat, lon) |>
   summarize(n = n())
 
-nyc_map_12 + geom_point(data = pd, aes(x = lon, y = lat, size = n), show.legend = FALSE, col = alpha("hotpink4", 0.4)) + labs(title = "Geographic location of Pizza restaurants")
+nyc_map_12 + geom_point(data = pd, aes(x = lon, y = lat, size = n), show.legend = TRUE, col = alpha("lightseagreen", 0.4)) + labs(title = "Geographic location of pizza restaurants") + theme_map()
+ggsave(filename = "../figures/map_pizza.png", width = 5, height = 5)
 ```
 
 # A spike in racist reviews?
@@ -388,9 +406,9 @@ pizza_sentiment <- read_csv("../sentiment_data/pizza_sentiment.csv") |>
 
 combined_sentiments <- bind_rows(asn_sentiment, mex_sentiment, pizza_sentiment)
 
-combined_sentiments |>filter(polarity == -1) |> 
+combined_sentiments |>
+  filter(polarity == -1) |>
   filter(type == "asian") |>
   slice_sample(n = 3) |>
   pull(text)
 ```
-
