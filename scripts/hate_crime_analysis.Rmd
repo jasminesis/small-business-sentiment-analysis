@@ -15,6 +15,7 @@ library(dplyr)
 library(lubridate)
 library(ggplot2)
 library(readr)
+library(sf)
 ```
 ```{r}
 # NYPD Hate Crimes (from NYC Open Data)
@@ -79,5 +80,55 @@ asian_trend <- ggplot(asian_monthly, aes(x = YearMonth, y = incidents_count)) +
   geom_text(aes(x = as.Date("2021-03-16"), y = max(asian_monthly$incidents_count), 
                 label = "Stop Asian Hate"), angle = 270, vjust = -0.5, color = "red", size = 2)
 # ggsave("asian_trend.png", plot = asian_trend)
+show(asian_trend)
 ```
+
+
+```{r}
+# Create a choropleth map for precinct 
+asian_crimes <- hate_crime %>%
+  filter(`Bias Motive Description` == "ANTI-ASIAN") %>%
+  group_by(`Complaint Year Number`, `Complaint Precinct Code`) %>%
+  summarize(crime_count = n()) %>% 
+  mutate(`Complaint Precinct Code` = as.character(`Complaint Precinct Code`))
+
+# Prepare map data
+nyc_precincts <- st_read("/Users/jiashuliu/Desktop/Projects/small-business-sentiment-analysis/crime_data/police_precincts.geojson")
+nyc_map <- left_join(nyc_precincts, asian_crimes, by = c("precinct" = "Complaint Precinct Code"))
+
+# Fill NA with 0
+nyc_map$crime_count[is.na(nyc_map$crime_count)] <- 0
+
+ggplot(nyc_map) +
+  geom_sf(aes(fill = crime_count)) +
+  scale_fill_viridis_c(option = "C", name = "Asian Hate Crimes", na.value = "grey") +
+  labs(title = "Asian Hate Crime Counts by Precinct in NYC",
+       subtitle = "Data Source: NYC Open Data") +
+  theme_minimal() +
+  facet_wrap(~ `Complaint Year Number`)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
