@@ -97,9 +97,11 @@ nyc_precincts <- st_read("/Users/jiashuliu/Desktop/Projects/small-business-senti
 nyc_map <- left_join(nyc_precincts, asian_crimes, by = c("precinct" = "Complaint Precinct Code"))
 
 # Fill NA with 0
-nyc_map$crime_count[is.na(nyc_map$crime_count)] <- 0
+#nyc_map$crime_count[is.na(nyc_map$crime_count)] <- 0
+nyc_map_filtered <- nyc_map %>% 
+  filter(!is.na(`Complaint Year Number`))
 
-ggplot(nyc_map) +
+ggplot(nyc_map_filtered) +
   geom_sf(aes(fill = crime_count)) +
   scale_fill_viridis_c(option = "C", name = "Asian Hate Crimes", na.value = "grey") +
   labs(title = "Asian Hate Crime Counts by Precinct in NYC",
