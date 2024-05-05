@@ -1,0 +1,33 @@
+---
+title: "Hate Crime Analysis"
+author: "Jiashu Liu"
+date: "2024-05-05"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(dplyr)
+library(lubridate)
+library(ggplot2)
+library(readr)
+```
+```{r}
+# NYPD Hate Crimes (from NYC Open Data)
+nypd_hate_crime <- read_csv("~/Desktop/Projects/small-business-sentiment-analysis/crime_data/NYPD_Hate_Crimes_20240505.csv")
+hate_crime <- nypd_hate_crime %>% 
+  select(-c(`Arrest Date`, `Arrest Id`))
+```
+
+```{r}
+monthly_data <- hate_crime %>%
+  mutate(`Record Create Date` = as.Date(`Record Create Date`, format = "%m/%d/%Y"),
+         YearMonth = format(as.Date(`Record Create Date`), "%Y-%m")) %>% 
+  group_by(YearMonth) %>%
+  summarize(incidents_count = n())
+```
+
