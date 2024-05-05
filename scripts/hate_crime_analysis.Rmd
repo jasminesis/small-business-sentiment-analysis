@@ -20,14 +20,64 @@ library(readr)
 # NYPD Hate Crimes (from NYC Open Data)
 nypd_hate_crime <- read_csv("~/Desktop/Projects/small-business-sentiment-analysis/crime_data/NYPD_Hate_Crimes_20240505.csv")
 hate_crime <- nypd_hate_crime %>% 
-  select(-c(`Arrest Date`, `Arrest Id`))
+  select(-c(`Arrest Date`, `Arrest Id`)) %>% 
+  mutate(`Record Create Date` = as.Date(`Record Create Date`, format = "%m/%d/%Y"),
+         YearMonth = format(as.Date(`Record Create Date`), "%Y-%m")) 
+```
+```{r}
+# Plot general trend
+monthly_data <- hate_crime %>%
+  group_by(YearMonth) %>%
+  summarize(incidents_count = n()) %>% 
+  mutate(trend = "General")
+
+monthly_data <- monthly_data %>%
+  mutate(YearMonth = as.Date(paste0(YearMonth, "-01")))
+
+general_trend <- ggplot(monthly_data, aes(x = YearMonth, y = incidents_count, color = trend, group = trend)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Monthly Hate Crime Incidents",
+       x = "Month",
+       y = "Number of Incidents") +
+  theme_minimal() +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y")+
+  scale_color_manual(values = c("General" = "black"))
+ggsave("general_trend.png", plot = general_trend)
 ```
 
 ```{r}
-monthly_data <- hate_crime %>%
-  mutate(`Record Create Date` = as.Date(`Record Create Date`, format = "%m/%d/%Y"),
-         YearMonth = format(as.Date(`Record Create Date`), "%Y-%m")) %>% 
+# Table for Bias Motivation in different year month 
+bias <- hate_crime %>% 
+  group_by(YearMonth, `Bias Motive Description`) %>% 
+  summarise(incidents_count = n(), .groups = 'drop')
+table_result <- bias %>%
+  spread(`Bias Motive Description`, incidents_count, fill = 0)
+print(table_result)
+```
+
+```{r}
+# asian hate trend
+asian_hate <- hate_crime %>% 
+  filter(`Bias Motive Description` == "ANTI-ASIAN") %>% 
   group_by(YearMonth) %>%
-  summarize(incidents_count = n())
+  summarize(incidents_count = n()) %>% 
+  mutate(trend = "Asian")
+
+asian_monthly <- asian_hate %>%
+  mutate(YearMonth = as.Date(paste0(YearMonth, "-01")))
+
+asian_trend <- ggplot(asian_monthly, aes(x = YearMonth, y = incidents_count)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Monthly Asian Hate Crime Incidents",
+       x = "Month",
+       y = "Number of Incidents") +
+  theme_minimal()+
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y")+
+  geom_vline(xintercept = as.Date("2021-03-15"), linetype = "dashed", color = "red") +
+  geom_text(aes(x = as.Date("2021-03-16"), y = max(asian_monthly$incidents_count), 
+                label = "Stop Asian Hate"), angle = 270, vjust = -0.5, color = "red", size = 2)
+# ggsave("asian_trend.png", plot = asian_trend)
 ```
 
