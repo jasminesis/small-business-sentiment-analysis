@@ -116,9 +116,11 @@ categories <- hate_crime %>%
   filter(`Bias Motive Description` == "ANTI-ASIAN") %>% 
   group_by(`Law Code Category Description`) %>% 
   summarise(count = n())
-categories %>% 
+cat_table <- categories %>% 
   knitr::kable(col.names = c("Law Code Category Description", "Count"), 
-        caption = "Number of Hate Crimes by Law Code Category Description") 
+        caption = "Asian Hate Crimes by Law Code Category Description") %>% 
+  kableExtra::kable_styling()
+cat_table
 ```
 
 
