@@ -17,12 +17,6 @@ review_1_5 <- na.omit(review_1_5)
 write.csv(review_1_5, "joined_reviews.csv")
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
 ```{r}
 sentiment_reviews <- read_csv("reviews_with_sentiment.csv")
 ```
@@ -44,10 +38,6 @@ ggplot(avg_sentiment, aes(x = date, y = as.numeric(polarity))) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-
-## Including Plots
-
-You can also embed plots, for example:
 
 ```{r pressure}
 review_pizza <- get(load("d_pizza_joined_1_5.RData"))
