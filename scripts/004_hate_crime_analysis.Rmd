@@ -104,7 +104,7 @@ asian_trend <- ggplot(asian_monthly, aes(x = YearMonth, y = incidents_count)) +
     label = "Stop AAPI Hate", vjust = 1.5, hjust = 1, size = 3,
     xintercept = stopah_start, color = "dodgerblue2", lty = "dashed"
   )
-ggsave("../figures/asian_hate_crime_trends.png", width = 6, height = 4)
+# ggsave("../figures/asian_hate_crime_trends.png", width = 6, height = 4)
 show(asian_trend)
 ```
 ```{r}
@@ -168,7 +168,7 @@ offense_cat <- ggplot(categories, aes(x = "", y = percentage, fill = `Law Code C
   scale_fill_discrete(name = "Offense Category") +
   geom_text(aes(label = label), position = position_stack(vjust = 0.5), size = 3)
 
-ggsave("../figures/offense_cat.png", plot = offense_cat, width = 5, height = 4)
+# ggsave("../figures/offense_cat.png", plot = offense_cat, width = 5, height = 4)
 ```
 
 ```{r}
@@ -190,7 +190,7 @@ felony <- ggplot(felony_type, aes(y = reorder(`Offense Description`, count), x =
   ) +
   theme_custom() +
   theme(axis.text.y = element_text(size=6))
-ggsave("../figures/felony.png", plot = felony, width=6, height=4)
+# ggsave("../figures/felony.png", plot = felony, width=6, height=4)
 ```
 
 
@@ -204,8 +204,8 @@ print(unique_bias_motives_count)
 # Create Moran's I test for each year of anti-asian hate crimes
 
 # Prepare map data
-nyc_precincts <- st_read("/Users/jiashuliu/Desktop/Projects/small-business-sentiment-analysis/crime_data/police_precincts.geojson")
-nyc_map <- left_join(nyc_precincts, asian_crimes, by = c("precinct" = "Complaint Precinct Code"))
+# nyc_precincts <- st_read("/Users/jiashuliu/Desktop/Projects/small-business-sentiment-analysis/crime_data/police_precincts.geojson")
+# nyc_map <- left_join(nyc_precincts, asian_crimes, by = c("precinct" = "Complaint Precinct Code"))
 
 years <- unique(hate_crime$`Complaint Year Number`)
 results <- data.frame(Year = numeric(), StatisticsValue = numeric(), p_value = numeric())
