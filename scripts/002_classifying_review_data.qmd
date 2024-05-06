@@ -196,24 +196,23 @@ combined_reviews |>
   scale_fill_manual(values = c("lightpink", "steelblue", "darkseagreen")) +
   geom_bar(stat = "identity") +
   labs(title = "Count of all reviews by cuisine", fill = "Cuisine", x = "Date", y = "Count")
-# ggsave("../figures/count_by_cuisine.png", width = 8, height = 5)
+ggsave("../figures/count_by_cuisine.png", width = 8, height = 5)
 
 # wanted to do a density
-# combined_reviews |>
-#   mutate(type = factor(str_to_title(type), levels = c("Asian", "Mexican", "Pizza"))) |>
-#   # count(date, type) |>
-#   ggplot(aes(x = date, fill = type)) +
-#   geom_textvline(
-#     label = "COVID-19", vjust = 1.5, hjust = 1, size = 3,
-#     xintercept = covid_start, color = "indianred2", lty = "dashed"
-#   ) +
-#   geom_textvline(
-#     label = "Stop AAPI Hate", vjust = 1.5, hjust = 1, size = 3,
-#     xintercept = stopah_start, color = "dodgerblue2", lty = "dashed"
-#   ) +
-#   scale_fill_manual(values = c("lightpink", "steelblue", "darkseagreen")) +
-#   geom_density()+
-#   labs(title = "Count of all reviews by cuisine", fill = "Cuisine", x = "Date", y = "Count")
+combined_reviews |>
+  mutate(type = factor(str_to_title(type), levels = c("Asian", "Mexican", "Pizza"))) |>
+  # count(date, type) |>
+  ggplot(aes(x = date, color = type)) +
+  geom_vline(
+    xintercept = covid_start, color = "indianred2", lty = "dashed"
+  ) +
+  geom_vline(
+    xintercept = stopah_start, color = "dodgerblue2", lty = "dashed"
+  ) +
+  scale_color_manual(values = c("lightpink", "steelblue", "darkseagreen")) +
+  geom_density()+
+  labs(title = "Count density of all reviews by cuisine", color = "Cuisine", x = "Date", y = "Density")
+ggsave("../figures/density_by_cuisine.png", width = 8, height = 5)
 
 ```
 
