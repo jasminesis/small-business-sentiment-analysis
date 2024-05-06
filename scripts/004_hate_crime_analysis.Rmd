@@ -19,6 +19,7 @@ library(sf)
 library(knitr)
 library(scales)
 library(geomtextpath) # for geom_textvline
+library(spdep)
 
 # for Jiashu's directory
 setwd("~/Desktop/Projects/small-business-sentiment-analysis")
@@ -198,3 +199,40 @@ unique_bias_motives_count <- length(unique(hate_crime$`Bias Motive Description`)
 
 print(unique_bias_motives_count)
 ```
+
+```{r}
+# Create Moran's I test for each year of anti-asian hate crimes
+
+# Prepare map data
+nyc_precincts <- st_read("/Users/jiashuliu/Desktop/Projects/small-business-sentiment-analysis/crime_data/police_precincts.geojson")
+nyc_map <- left_join(nyc_precincts, asian_crimes, by = c("precinct" = "Complaint Precinct Code"))
+
+years <- unique(hate_crime$`Complaint Year Number`)
+results <- data.frame(Year = numeric(), StatisticsValue = numeric(), p_value = numeric())
+
+for (year in years) {
+  crimes <- hate_crime %>%
+    filter(`Bias Motive Description` == "ANTI-ASIAN",
+      `Complaint Year Number` == year) %>%
+    group_by(`Complaint Precinct Code`) %>%
+    summarise(crime_count = n()) %>% 
+    mutate(`Complaint Precinct Code` = as.character(`Complaint Precinct Code`))
+
+  nyc_map <- left_join(nyc_precincts, crimes, by = c("precinct" = "Complaint Precinct Code"))
+  nyc_map$crime_count[is.na(nyc_map$crime_count)] <- 0
+
+  nyc_nb <- poly2nb(nyc_map)
+  nyc_listw <- nb2listw(nyc_nb)
+
+  # Perform Moran's I test
+  moran_test <- moran.test(nyc_map$crime_count, nyc_listw)
+  results <- rbind(results, data.frame(Year = year, StatisticsValue = moran_test$estimate[1], p_value = moran_test$p.value))
+}
+library(formattable)
+formattable_table <- formattable(results, list(
+  `Moran's I Statistic` = color_tile("white", "orange"),
+  `p-value` = color_tile("white", "lightblue")
+))
+
+```
+
