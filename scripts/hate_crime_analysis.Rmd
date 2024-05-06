@@ -16,6 +16,7 @@ library(lubridate)
 library(ggplot2)
 library(readr)
 library(sf)
+library(knitr)
 ```
 ```{r}
 # NYPD Hate Crimes (from NYC Open Data)
@@ -110,6 +111,15 @@ ggplot(nyc_map_filtered) +
   facet_wrap(~ `Complaint Year Number`)
 ```
 
+```{r}
+categories <- hate_crime %>% 
+  filter(`Bias Motive Description` == "ANTI-ASIAN") %>% 
+  group_by(`Law Code Category Description`) %>% 
+  summarise(count = n())
+categories %>% 
+  knitr::kable(col.names = c("Law Code Category Description", "Count"), 
+        caption = "Number of Hate Crimes by Law Code Category Description") 
+```
 
 
 
