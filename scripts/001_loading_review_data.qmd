@@ -1,0 +1,109 @@
+---
+title: "loading review data"
+format: html
+---
+
+```{r}
+library(jsonlite)
+library(tidyverse)
+library(foreach)
+
+setwd("~/Documents/GitHub/small-business-sentiment-analysis/scripts/")
+```
+
+
+# Load data
+
+The files are from https://datarepo.eng.ucsd.edu/mcauley_group/gdrive/googlelocal/
+
+in the format where
+
+user_id - ID of the reviewer
+name - name of the reviwer
+time - time of the review (unix time)
+rating - rating of the business
+text - text of the review
+pics - pictures of the review
+resp - business response to the review including unix time and text of the response
+gmap_id - ID of the business
+
+and crosslink with gmap_id in metadata where
+
+name - name of the business
+address - address of the business
+gmap_id - ID of the business
+description - description of the business
+latitude - latitude of the business
+longitude - longitude of the business
+category - category of the business
+avg_rating - average rating of the business
+num_of_reviews - number of reviews
+price - price of the business
+hours - open hours
+MISC - MISC information
+state - the current status of the business (e.g., permanently closed)
+relative_results - relative businesses recommended by Google
+url - URL of the business
+
+
+# Extract columns from metadata
+
+```{r eval=F}
+meta_file <- "../review_data/meta-New_York.json"
+meta_json <- purrr::map(readLines(meta_file), jsonlite::fromJSON, .progress = "loading metadata")
+
+l <- map(meta_json, function(x) {
+  cbind(
+    ifelse(is.null(x$name), NA, x$name),
+    x$gmap_id,
+    ifelse(is.null(x$address), NA, x$address),
+    ifelse(is.null(x$category), NA, paste(x$category, collapse = ", "))
+  )
+})
+metadata <- data.frame(matrix(unlist(l), ncol = 4, byrow = TRUE))
+colnames(metadata) <- c("name", "gmap_id", "address", "category")
+metadata <- tibble(metadata) |> distinct()
+```
+
+# Extract columns from review data
+
+```{r eval=F}
+filepaths <- list.files(path = "../review_data/review_data_split")
+
+foreach(i = seq(1, 100, by = 5)) %do% {
+  reviews_by_5 <- foreach(current_file = filepaths[i:(i + 4)], .combine = "rbind") %do% {
+    review_json <- purrr::map(readLines(paste0("../review_data/review_data_split/", current_file)), jsonlite::fromJSON, .progress = paste("loading file", current_file))
+    l <- map(review_json, function(x) {
+      ƒ
+      cbind(x$time, ifelse(is.null(x$rating), NA, x$rating), ifelse(is.null(x$text), NA, x$text), x$gmap_id)
+    })
+    r <- data.frame(matrix(unlist(l), ncol = 4, byrow = TRUE))
+    colnames(r) <- c("time", "rating", "text", "gmap_id")
+    r
+  }
+  reviews_by_5 <- reviews_by_5 |> distinct()
+  save(reviews_by_5, file = paste0("reviews_", ceiling(i / 5), ".RData"))
+  rm(reviews_by_5)
+}
+```
+
+# Filter out only 2019, 2020 and 2021 reviews
+
+```{r eval=F}
+reviews <- foreach(i = seq(1, 20), .combine = "rbind") %do% {
+  filename <- paste0("../review_data/reviews/reviews_", i, ".RData")
+  # the reviews_2 to 20 files loads a variable called reviews_by_5, so you have to bind them immediately or it'll overwrite
+  load(filename)
+  reviews_by_5 <- reviews_by_5 |>
+    distinct() |>
+    mutate(
+      time = as.POSIXct(as.numeric(time) / 1000, origin = "1970-01-01", tz = "UTC"),
+      month = format(time, "%m"),
+      year = format(time, "%Y"),
+      rating = as.numeric(rating)
+    ) |>
+    filter(year %in% c("2019", "2020", "2021"))
+  reviews_by_5
+}
+save(reviews, file = "../review_data/reviews19_20_21.RData")
+```

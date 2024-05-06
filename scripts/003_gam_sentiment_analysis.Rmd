@@ -1,0 +1,515 @@
+---
+title: "Review Data"
+author: "Sophia Deng"
+date: "2024-04-28"
+output: pdf_document
+---
+
+```{r}
+library("tidyverse")
+source("ggplot_settings.R")
+theme_set(theme_custom())
+```
+
+```{r setup, include=FALSE}
+review_1_5 <- get(load("joined_reviews_1_5.RData"))
+review_1_5 <- na.omit(review_1_5)
+write.csv(review_1_5, "joined_reviews.csv")
+```
+
+```{r}
+sentiment_reviews <- read_csv("reviews_with_sentiment.csv")
+```
+
+```{r}
+sentiment_reviews$date <- paste(sentiment_reviews$year, sentiment_reviews$month, sep = "-")
+# Calculate average sentiment per month
+avg_sentiment <- aggregate(polarity ~ date, data = sentiment_reviews, FUN = mean)
+
+avg_sentiment <- avg_sentiment %>%
+  filter(str_detect(date, "^2019|2020|2021"))
+avg_sentiment$date <- paste(avg_sentiment$year, avg_sentiment$month, sep = "-")
+# Plot the graph
+ggplot(avg_sentiment, aes(x = date, y = as.numeric(polarity))) +
+  geom_point() +
+  geom_smooth(aes(group = 1), method = "loess", se = FALSE) +
+  labs(x = "Date", y = "Average Sentiment", title = "Average Sentiment per Month") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+
+```{r pressure}
+review_pizza <- get(load("d_pizza_joined_1_5.RData"))
+review_pizza <- na.omit(review_pizza)
+write.csv(review_pizza, "joined_reviews_pizza.csv")
+```
+
+
+```{r}
+pizza_sentiment_reviews <- read_csv("pizza_reviews_with_sentiment.csv")
+```
+```{r}
+pizza_sentiment_reviews$date <- paste(pizza_sentiment_reviews$year, pizza_sentiment_reviews$month, sep = "-")
+# Calculate average sentiment per month
+pizza_avg_sentiment <- aggregate(polarity ~ date, data = pizza_sentiment_reviews, FUN = mean)
+
+pizza_avg_sentiment <- pizza_avg_sentiment %>%
+  filter(str_detect(date, "^2019|2020|2021"))
+
+# Plot the graph
+ggplot(pizza_avg_sentiment, aes(x = date, y = as.numeric(polarity))) +
+  geom_point() +
+  geom_smooth(aes(group = 1), method = "loess", se = FALSE) +
+  labs(x = "Date", y = "Average Sentiment", title = "Average Sentiment per Month") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r}
+pizza_avg_sentiment <- pizza_avg_sentiment %>% rename(pizza_polarity = polarity)
+avg_sentiment <- avg_sentiment %>% rename(asian_polarity = polarity)
+```
+
+
+
+```{r}
+merge_sentiment <- merge(pizza_avg_sentiment, avg_sentiment, by = "date")
+```
+
+
+```{r}
+ggplot(data = merge_sentiment) +
+  geom_point(aes(x = date, y = pizza_polarity), color = "lightpink") +
+  geom_smooth(aes(group = 1, x = date, y = pizza_polarity), color = "lightpink", method = "loess", se = FALSE) +
+  geom_point(aes(x = date, y = asian_polarity), color = "darkseagreen") +
+  geom_smooth(aes(group = 1, x = date, y = asian_polarity), color = "darkseagreen", method = "loess", se = FALSE) +
+  labs(x = "Date", y = "Average Sentiment", title = "Average Sentiment per Month") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+### Mexican 
+
+```{r}
+review_mexican <- get(load("d_mex_1_5.RData"))
+review_mexican <- na.omit(review_mexican)
+write.csv(review_mexican, "joined_reviews_mexican.csv")
+```
+
+```{r}
+mexican_sentiment_reviews <- read_csv("mexican_reviews_with_sentiment.csv")
+
+mexican_sentiment_reviews$date <- paste(mexican_sentiment_reviews$year, mexican_sentiment_reviews$month, sep = "-")
+# Calculate average sentiment per month
+mexican_avg_sentiment <- aggregate(polarity ~ date, data = mexican_sentiment_reviews, FUN = mean)
+
+mexican_avg_sentiment <- mexican_avg_sentiment %>%
+  filter(str_detect(date, "^2019|2020|2021"))
+
+# Plot the graph
+ggplot(mexican_avg_sentiment, aes(x = date, y = as.numeric(polarity))) +
+  geom_point() +
+  geom_smooth(aes(group = 1), method = "loess", se = FALSE) +
+  labs(x = "Date", y = "Average Sentiment", title = "Average Sentiment per Month") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r}
+# mexican_avg_sentiment <- mexican_avg_sentiment %>% rename(mexican_polarity = polarity)
+merge_sentiment <- merge(pizza_avg_sentiment, avg_sentiment, by = "date")
+merge_sentiment_all <- merge(merge_sentiment, mexican_avg_sentiment, by = "date")
+
+ggplot(data = merge_sentiment_all) +
+  geom_point(aes(x = date, y = pizza_polarity), color = "lightpink") +
+  geom_smooth(aes(group = 1, x = date, y = pizza_polarity), color = "lightpink", method = "loess", se = FALSE) +
+  geom_point(aes(x = date, y = asian_polarity), color = "darkseagreen") +
+  geom_smooth(aes(group = 1, x = date, y = asian_polarity), color = "darkseagreen", method = "loess", se = FALSE) +
+  geom_point(aes(x = date, y = mexican_polarity), color = "steelblue") +
+  geom_smooth(aes(group = 1, x = date, y = mexican_polarity), color = "steelblue", method = "loess", se = FALSE) +
+  labs(x = "Date", y = "Average Sentiment", title = "Average Sentiment per Month") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+### American 
+
+```{r}
+review_american <- get(load("d_american_1_5.RData"))
+review_american <- na.omit(review_american)
+write.csv(review_american, "joined_reviews_american.csv")
+```
+
+
+### All Reviews
+```{r}
+reviews_all <- get(load("combined_reviews.RData"))
+```
+
+```{r}
+asian_reviews <- reviews_all %>% filter(str_detect(type, "asian"))
+asian_reviews <- na.omit(asian_reviews)
+write.csv(asian_reviews, "all_asian_reviews.csv")
+
+pizza_reviews <- reviews_all %>% filter(str_detect(type, "pizza"))
+pizza_reviews <- na.omit(pizza_reviews)
+write.csv(pizza_reviews, "all_pizza_reviews.csv")
+
+mexican_reviews <- reviews_all %>% filter(str_detect(type, "mexican"))
+mexican_reviews <- na.omit(mexican_reviews)
+write.csv(mexican_reviews, "all_mexican_reviews.csv")
+```
+
+
+
+```{r}
+asian_sentiment <- read_csv("asian_sentiment.csv")
+asian_sentiment$date <- paste(asian_sentiment$year, asian_sentiment$month, sep = "-")
+# Calculate average sentiment per month
+asian_avg_sentiment <- aggregate(polarity ~ date, data = asian_sentiment, FUN = mean)
+
+# avg_sentiment$date <- paste(avg_sentiment$year, avg_sentiment$month, sep = "-")
+# Plot the graph
+ggplot(asian_avg_sentiment, aes(x = date, y = as.numeric(polarity))) +
+  geom_point() +
+  geom_smooth(aes(group = 1), method = "loess", se = FALSE) +
+  labs(x = "Date", y = "Average Sentiment", title = "Average Sentiment per Month") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+
+```{r}
+pizza_sentiment <- read_csv("pizza_sentiment.csv")
+pizza_sentiment_reviews <- read_csv("pizza_sentiment.csv")
+pizza_sentiment_reviews$date <- paste(pizza_sentiment_reviews$year, pizza_sentiment_reviews$month, sep = "-")
+# Calculate average sentiment per month
+pizza_avg_sentiment <- aggregate(polarity ~ date, data = pizza_sentiment_reviews, FUN = mean)
+
+# Plot the graph
+ggplot(pizza_avg_sentiment, aes(x = date, y = as.numeric(polarity))) +
+  geom_point() +
+  geom_smooth(aes(group = 1), method = "loess", se = FALSE) +
+  labs(x = "Date", y = "Average Sentiment", title = "Average Sentiment per Month") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+
+
+
+```{r}
+mexican_sentiment_reviews <- read_csv("mexican_sentiment.csv")
+mexican_sentiment <- read_csv("mexican_sentiment.csv")
+mexican_sentiment_reviews$date <- paste(mexican_sentiment_reviews$year, mexican_sentiment_reviews$month, sep = "-")
+# Calculate average sentiment per month
+mexican_avg_sentiment <- aggregate(polarity ~ date, data = mexican_sentiment_reviews, FUN = mean)
+
+
+# Plot the graph
+ggplot(mexican_avg_sentiment, aes(x = date, y = as.numeric(polarity))) +
+  geom_point() +
+  geom_smooth(aes(group = 1), method = "loess", se = FALSE) +
+  labs(x = "Date", y = "Average Sentiment", title = "Average Sentiment per Month") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+
+```{r}
+# REMOVING LAST 3 MONTHS OF 2021 DATA
+combined_reviews <- get(load("../review_data/combined_reviews.RData"))
+combined_reviews <-
+  bind_rows(asian_sentiment, mexican_sentiment, pizza_sentiment) |>
+  mutate(date = as.Date(paste(year, month, 01), "%Y %m %d")) |>
+  filter(time <= as.Date(paste(2021, 06, 01), "%Y %m %d"))
+```
+
+
+```{r}
+library(geomtextpath) # for geom_textvline
+covid_start <- as.Date(paste(2020, 03, 15), "%Y %m %d")
+stopah_start <- as.Date(paste(2021, 03, 11), "%Y %m %d")
+
+combined_reviews |>
+  mutate(type = factor(str_to_title(type), levels = c("Asian", "Mexican", "Pizza"))) |>
+  group_by(type, month, year) |>
+  summarise(mean_polarity = mean(polarity)) |>
+  mutate(date = as.Date(paste(year, month, 01), "%Y %m %d")) |>
+  filter(date <= as.Date(paste(2021, 06, 01), "%Y %m %d")) |>
+  ggplot(aes(x = date, y = mean_polarity, color = type)) +
+  geom_line() +
+  geom_point() +
+  scale_color_manual(values = c("lightpink", "steelblue", "darkseagreen")) +
+  geom_vline(xintercept = covid_start, color = "indianred2", lty = "dashed") +
+  geom_vline(xintercept = stopah_start, color = "dodgerblue2", lty = "dashed") +
+  # facet_wrap(vars(mean_rating)) +
+  labs(title = "Average polarity over time for Asian, Mexican and pizza restaurants", color = "Cuisine", x = "Date", y = "Average polarity")
+
+# ggsave(filename = "../figures/average_polarity.png", width = 8, height = 5)
+```
+
+
+
+
+
+```{r}
+# mexican_avg_sentiment <- mexican_avg_sentiment %>% rename(mexican_polarity = polarity)
+# merge_sentiment <- merge(pizza_sentiment_reviews,asian_sentiment,by="date")
+# merge_sentiment_all <- merge(merge_sentiment,mexican_sentiment_reviews,by="date")
+
+ggplot() +
+  geom_point(data = pizza_avg_sentiment, aes(x = date, y = as.numeric(polarity), colour = "one"), color = "lightpink", show.legend = TRUE) +
+  geom_smooth(data = pizza_avg_sentiment, aes(group = 1, x = date, y = as.numeric(polarity)), color = "lightpink", show.legend = TRUE, method = "loess", se = FALSE) +
+  geom_point(data = asian_avg_sentiment, aes(x = date, y = as.numeric(polarity)), color = "darkseagreen") +
+  geom_smooth(data = asian_avg_sentiment, aes(group = 1, x = date, y = as.numeric(polarity)), color = "darkseagreen", method = "loess", se = FALSE) +
+  geom_point(data = mexican_avg_sentiment, aes(x = date, y = as.numeric(polarity)), color = "steelblue") +
+  geom_smooth(data = mexican_avg_sentiment, aes(group = 1, x = date, y = as.numeric(polarity)), color = "steelblue", method = "loess", se = FALSE) +
+  labs(x = "Date", y = "Average Sentiment", title = "Average Sentiment per Month") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_color_manual(
+    values = c("lightpink", "darkseagreen", "steelblue"),
+    labels = c("Pizza", "Asian", "Mexican")
+  ) +
+  theme(plot.title = element_text(hjust = 0.5))
+
+ggplot() +
+  geom_point(data = pizza_avg_sentiment, aes(x = date, y = as.numeric(polarity)), color = "lightpink", show.legend = TRUE) +
+  scale_color_manual(
+    values = c("lightpink"),
+    labels = c("Pizza")
+  )
+
+
+# ggplot(data=pizza_avg_sentiment) +
+#   geom_point(aes(x=date,y=as.numeric(polarity),color='pink'),color="lightpink") +
+#   geom_smooth(aes(group=1,x=date,y=as.numeric(polarity),color='pink'),color="lightpink",method="loess",se=FALSE) +
+#   labs(x = "Date", y = "Average Sentiment", title = "Average Sentiment per Month") +
+#   theme_minimal() +
+#   theme(axis.text.x=element_text(angle=45,hjust=1)) +
+#   theme(plot.title = element_text(hjust = 0.5)) + facet_wrap(rating)
+```
+
+
+
+Asian with date_lub as 3/11 (start of covid)
+
+```{r}
+# polarity, subjectivity, rating
+# if nested:
+library(mgcv)
+library(lubridate)
+library(tidyverse)
+asian_sentiment <- combined_reviews %>% filter(type == "asian")
+mexican_sentiment <- combined_reviews %>% filter(type == "mexican")
+pizza_sentiment <- combined_reviews %>% filter(type == "pizza")
+
+asian_sentiment$date_lub <- as.numeric(lubridate::as_date(asian_sentiment$time) - lubridate::as_date("2020-03-11"))
+# using gam model with te (tensor) which allows for an interaction
+gams_asian <- mgcv::gam(polarity ~ 1 + te(rating, date_lub, k = c(4, 10)), data = asian_sentiment)
+summary(gams_asian)
+
+mexican_sentiment$date_lub <- as.numeric(lubridate::as_date(mexican_sentiment$time) - lubridate::as_date("2020-03-11"))
+# using gam model with te (tensor) which allows for an interaction
+gams_mexican <- mgcv::gam(polarity ~ 1 + te(rating, date_lub, k = c(4, 10)), data = mexican_sentiment)
+summary(gams_mexican)
+
+pizza_sentiment$date_lub <- as.numeric(lubridate::as_date(pizza_sentiment$time) - lubridate::as_date("2020-03-11"))
+# using gam model with te (tensor) which allows for an interaction
+gams_pizza <- mgcv::gam(polarity ~ 1 + te(rating, date_lub, k = c(4, 10)), data = pizza_sentiment)
+summary(gams_pizza)
+```
+
+Comparing 1 star reviews
+```{r}
+one_star_df_asian <- data.frame(
+  date_lub = -435:446,
+  rating = 1
+)
+
+one_star_df_asian$polarity <- predict(gams_asian, newdata = one_star_df)
+one_star_df_asian$type <- rep("Asian", length(one_star_df$polarity))
+
+one_star_df_mexican <- data.frame(
+  date_lub = -435:446,
+  rating = 1
+)
+one_star_df_mexican$polarity <- predict(gams_mexican, newdata = one_star_df_mexican)
+one_star_df_mexican$type <- rep("Mexican", length(one_star_df_mexican$polarity))
+
+one_star_df_pizza <- data.frame(
+  date_lub = -435:446,
+  rating = 1
+)
+one_star_df_pizza$polarity <- predict(gams_pizza, newdata = one_star_df_pizza)
+one_star_df_pizza$type <- rep("Pizza", length(one_star_df_pizza$polarity))
+
+
+one_star_df <- one_star_df_asian %>%
+  bind_rows(one_star_df_mexican) %>%
+  bind_rows(one_star_df_pizza)
+
+
+ggplot(data = one_star_df, aes(x = date_lub, y = polarity, color = type)) +
+  geom_line(lwd = 0.1) +
+  geom_point() +
+  scale_color_manual(values = c("lightpink", "steelblue", "darkseagreen")) +
+  geom_vline(xintercept = 0, color = "indianred2", lty = "dashed") +
+  geom_vline(xintercept = 370, color = "dodgerblue2", lty = "dashed") +
+  labs(title = "Polarity over time for 1 star reviews", color = "Cuisine", x = "Days from US COVID-19 Lockdown", y = "Polarity") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+# ggsave(filename="",width = 8, height=5)
+```
+
+
+
+```{r}
+asian_df <- data.frame(
+  date_lub = -435:538,
+  rating = 5
+)
+asian_df$polarity <- predict(gams_asian, newdata = asian_df)
+
+p <- ggplot(data = asian_df, aes(x = date_lub, y = polarity))
+p <- p + geom_line()
+
+show(p)
+```
+
+```{r}
+asian_df2 <- data.frame(
+  date_lub = rep(-435:446, each = 5),
+  rating = 1:5
+)
+asian_df2$polarity <- predict(gams_asian, newdata = asian_df2)
+
+p <- ggplot(data = asian_df2, aes(x = date_lub, y = polarity))
+p <- p + geom_line(aes(color = as.character(rating)))
+p <- p + geom_vline(xintercept = 0, color = "indianred2", lty = "dashed") +
+  geom_vline(xintercept = 370, color = "dodgerblue2", lty = "dashed")
+p <- p + labs(title = "Polarity over Time for Asian Restaurants", color = "Rating", x = "Days from US COVID Lockdown", y = "Polarity") + theme_minimal() + theme(plot.title = element_text(hjust = 0.5))
+show(p)
+```
+
+
+```{r}
+# polarity vs rating
+
+p <- ggplot(data = asian_sentiment, aes(x = as.character(rating), y = polarity))
+p <- p + geom_violin()
+p <- p + theme_minimal()
+
+show(p)
+```
+
+
+```{r}
+# polarity vs date, color by rating
+
+p <- ggplot(data = asian_sentiment, aes(x = date_lub, y = polarity))
+p <- p + geom_smooth(aes(color = as.factor(rating)), method = "loess", se = FALSE)
+
+show(p)
+```
+
+
+
+```{r}
+# polarity, subjectivity, rating
+# if nested:
+library(mgcv)
+library(lubridate)
+mexican_sentiment_reviews$date_lub <- as.numeric(lubridate::as_date(mexican_sentiment_reviews$time) - lubridate::as_date("2020-03-11"))
+gams_mexican <- mgcv::gam(polarity ~ 1 + te(rating, date_lub, k = c(4, 10)), data = mexican_sentiment_reviews)
+summary(gams_mexican)
+```
+
+
+
+```{r}
+mexican_df2 <- data.frame(
+  date_lub = rep(-435:538, each = 5),
+  rating = 1:5
+)
+mexican_df2$polarity <- predict(gams_mexican, newdata = mexican_df2)
+
+p <- ggplot(data = mexican_df2, aes(x = date_lub, y = polarity))
+p <- p + geom_line(aes(color = as.character(rating)))
+
+show(p)
+```
+
+```{r}
+# polarity vs date, color by rating
+
+p <- ggplot(data = mexican_sentiment_reviews, aes(x = date_lub, y = polarity))
+p <- p + geom_smooth(aes(color = as.factor(rating)), method = "loess", se = FALSE)
+
+show(p)
+```
+
+```{r}
+# polarity, subjectivity, rating
+# if nested:
+library(mgcv)
+library(lubridate)
+pizza_sentiment_reviews$date_lub <- as.numeric(lubridate::as_date(pizza_sentiment_reviews$time) - lubridate::as_date("2020-03-11"))
+gams_pizza <- mgcv::gam(polarity ~ 1 + te(rating, date_lub, k = c(4, 10)), data = pizza_sentiment_reviews)
+summary(gams_pizza)
+```
+
+```{r}
+pizza_df2 <- data.frame(
+  date_lub = rep(-435:538, each = 5),
+  rating = 1:5
+)
+pizza_df2$polarity <- predict(gams_pizza, newdata = pizza_df2)
+
+p <- ggplot(data = pizza_df2, aes(x = date_lub, y = polarity))
+p <- p + geom_line(aes(color = as.character(rating)))
+
+show(p)
+```
+
+
+```{r}
+# polarity vs rating
+
+p <- ggplot(data = mexican_sentiment_reviews, aes(x = as.character(rating), y = polarity))
+p <- p + geom_violin()
+
+show(p)
+```
+
+
+```{r}
+# polarity vs rating
+
+p <- ggplot(data = pizza_sentiment_reviews, aes(x = as.character(rating), y = polarity))
+p <- p + geom_violin()
+
+show(p)
+```
+
+Projected range along one variable, but fixed rating for all observations. We plotted the response of the model for fixed values of thedate. 
+
+For a random forest: we have a mediam value. Can do this for up to two variables: interaction patterns, plotting by heatmap: color boxes by model output (vary two variables on x and y axis, are there hotspots for large or small model outputs)
+
+
+```{r}
+reviews_1 <- data.frame(
+  date_lub = -435:446,
+  rating = 1
+)
+reviews_1$polarity <- predict(gams_asian, newdata = asian_df2)
+
+p <- ggplot(data = asian_df2, aes(x = date_lub, y = polarity))
+p <- p + geom_line(aes(color = as.character(rating)))
+p <- p + geom_vline(xintercept = 0, color = "indianred2", lty = "dashed") +
+  geom_vline(xintercept = 370, color = "dodgerblue2", lty = "dashed")
+p <- p + labs(title = "Polarity over Time for Asian Restaurants", color = "Rating", x = "Days from US COVID Lockdown", y = "Polarity") + theme_minimal() + theme(plot.title = element_text(hjust = 0.5))
+show(p)
+```

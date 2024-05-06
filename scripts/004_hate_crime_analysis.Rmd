@@ -1,0 +1,200 @@
+---
+title: "Hate Crime Analysis"
+author: "Jiashu Liu"
+date: "2024-05-05"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(dplyr)
+library(lubridate)
+library(ggplot2)
+library(readr)
+library(sf)
+library(knitr)
+library(scales)
+library(geomtextpath) # for geom_textvline
+
+# for Jiashu's directory
+setwd("~/Desktop/Projects/small-business-sentiment-analysis")
+
+source("ggplot_settings.R")
+```
+
+
+```{r}
+# NYPD Hate Crimes (from NYC Open Data)
+nypd_hate_crime <- read_csv("../crime_data/NYPD_Hate_Crimes_20240505.csv")
+hate_crime <- nypd_hate_crime %>%
+  select(-c(`Arrest Date`, `Arrest Id`)) %>%
+  mutate(
+    `Record Create Date` = as.Date(`Record Create Date`, format = "%m/%d/%Y"),
+    YearMonth = format(as.Date(`Record Create Date`), "%Y-%m")
+  )
+```
+```{r}
+# Plot general trend
+monthly_data <- hate_crime %>%
+  group_by(YearMonth) %>%
+  summarize(incidents_count = n()) %>%
+  mutate(trend = "General")
+
+monthly_data <- monthly_data %>%
+  mutate(YearMonth = as.Date(paste0(YearMonth, "-01")))
+
+general_trend <- ggplot(monthly_data, aes(x = YearMonth, y = incidents_count, color = trend, group = trend)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Monthly Hate Crime Incidents",
+    x = "Month",
+    y = "Number of Incidents"
+  ) +
+  theme_minimal() +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  scale_color_manual(values = c("General" = "black"))
+ggsave("general_trend.png", plot = general_trend)
+```
+
+```{r}
+# Table for Bias Motivation in different year month
+bias <- hate_crime %>%
+  group_by(YearMonth, `Bias Motive Description`) %>%
+  summarise(incidents_count = n(), .groups = "drop")
+table_result <- bias %>%
+  spread(`Bias Motive Description`, incidents_count, fill = 0)
+print(table_result)
+```
+
+```{r}
+# asian hate trend
+asian_hate <- hate_crime %>%
+  filter(`Bias Motive Description` == "ANTI-ASIAN") %>%
+  group_by(YearMonth) %>%
+  summarize(incidents_count = n()) %>%
+  mutate(trend = "Asian")
+
+asian_monthly <- asian_hate %>%
+  mutate(YearMonth = as.Date(paste0(YearMonth, "-01")))
+
+covid_start <- as.Date(paste(2020, 03, 15), "%Y %m %d")
+stopah_start <- as.Date(paste(2021, 03, 11), "%Y %m %d")
+
+asian_trend <- ggplot(asian_monthly, aes(x = YearMonth, y = incidents_count)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Monthly Asian Hate Crime Incidents",
+    x = "Month",
+    y = "Number of Incidents"
+  ) +
+  theme_custom() +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  geom_textvline(
+    label = "COVID-19", vjust = 1.5, hjust = 1, size = 3,
+    xintercept = covid_start, color = "indianred2", lty = "dashed"
+  ) +
+  geom_textvline(
+    label = "Stop AAPI Hate", vjust = 1.5, hjust = 1, size = 3,
+    xintercept = stopah_start, color = "dodgerblue2", lty = "dashed"
+  )
+ggsave("../figures/asian_hate_crime_trends.png", width = 6, height = 4)
+show(asian_trend)
+```
+```{r}
+asian_hate_2020 <- hate_crime %>%
+  filter(`Bias Motive Description` == "ANTI-ASIAN") %>%
+  group_by(YearMonth) %>%
+  summarize(incidents_count = n()) %>%
+  mutate(trend = "Asian")
+asian_hate_2020
+```
+
+```{r}
+# Create a choropleth map for precinct
+asian_crimes <- hate_crime %>%
+  filter(`Bias Motive Description` == "ANTI-ASIAN") %>%
+  group_by(`Complaint Year Number`, `Complaint Precinct Code`) %>%
+  summarize(crime_count = n()) %>%
+  mutate(`Complaint Precinct Code` = as.character(`Complaint Precinct Code`))
+
+# Prepare map data
+nyc_precincts <- st_read("../crime_data/police_precincts.geojson")
+nyc_map <- left_join(nyc_precincts, asian_crimes, by = c("precinct" = "Complaint Precinct Code"))
+
+# Fill NA with 0
+# nyc_map$crime_count[is.na(nyc_map$crime_count)] <- 0
+nyc_map_filtered <- nyc_map %>%
+  filter(!is.na(`Complaint Year Number`))
+
+ggplot(nyc_map_filtered) +
+  geom_sf(aes(fill = crime_count)) +
+  scale_fill_viridis_c(option = "C", name = "Asian Hate Crimes", na.value = "grey") +
+  labs(
+    title = "Asian Hate Crime Counts by Precinct in NYC",
+    subtitle = "Data Source: NYC Open Data"
+  ) +
+  theme_minimal() +
+  facet_wrap(~`Complaint Year Number`)
+```
+
+```{r}
+# Percentage of offense categories in anti-Asian hate crimes
+categories <- hate_crime %>%
+  filter(`Bias Motive Description` == "ANTI-ASIAN") %>%
+  group_by(`Law Code Category Description`) %>%
+  summarise(count = n()) %>%
+  mutate(
+    percentage = count / sum(count) * 100,
+    label = paste0(`Law Code Category Description`, ": ", percent(count / sum(count)))
+  )
+
+offense_cat <- ggplot(categories, aes(x = "", y = percentage, fill = `Law Code Category Description`)) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar("y") +
+  labs(title = "Percentage of Offense Categories in \nAnti-Asian Hate Crimes") +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank()
+  ) +
+  scale_fill_discrete(name = "Offense Category") +
+  geom_text(aes(label = label), position = position_stack(vjust = 0.5), size = 3)
+
+ggsave("../figures/offense_cat.png", plot = offense_cat, width = 5, height = 4)
+```
+
+```{r}
+# Types of Felony
+felony_type <- hate_crime %>%
+  filter(
+    `Bias Motive Description` == "ANTI-ASIAN",
+    `Law Code Category Description` == "FELONY"
+  ) %>%
+  group_by(`Offense Description`) %>%
+  summarise(count = n())
+
+felony <- ggplot(felony_type, aes(y = reorder(`Offense Description`, count), x = count)) +
+  geom_bar(stat = "identity", fill = "lightblue") +
+  labs(
+    title = "Count of Each Type of Felony \nfor Anti-Asian Bias",
+    y = "Type of Felony",
+    x = "Count"
+  ) +
+  theme_custom() +
+  theme(axis.text.y = element_text(size=6))
+ggsave("../figures/felony.png", plot = felony, width=6, height=4)
+```
+
+
+```{r}
+unique_bias_motives_count <- length(unique(hate_crime$`Bias Motive Description`))
+
+print(unique_bias_motives_count)
+```
