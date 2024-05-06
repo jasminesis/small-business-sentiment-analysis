@@ -839,6 +839,26 @@
       </table>
       <simple-id uuid='{D0DF2E2F-0BFE-4E53-B966-FD65A66496A2}' />
     </worksheet>
+    <worksheet name='Sheet 3'>
+      <table>
+        <view>
+          <datasources />
+          <aggregation value='true' />
+        </view>
+        <style />
+        <panes>
+          <pane selection-relaxation-option='selection-relaxation-allow'>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='Automatic' />
+          </pane>
+        </panes>
+        <rows />
+        <cols />
+      </table>
+      <simple-id uuid='{76E0AD30-91A6-4E39-9450-91D14AB142FB}' />
+    </worksheet>
   </worksheets>
   <dashboards>
     <dashboard _.fcp.AccessibleZoneTabOrder.true...enable-sort-zone-taborder='true' name='Dashboard 1'>
@@ -847,8 +867,8 @@
       <zones>
         <zone h='100000' id='4' type-v2='layout-basic' w='100000' x='0' y='0'>
           <zone h='98000' id='7' param='horz' type-v2='layout-flow' w='98400' x='800' y='1000'>
-            <zone h='98000' id='5' type-v2='layout-basic' w='82400' x='800' y='1000'>
-              <zone h='98000' id='3' name='Sheet 1' w='41200' x='800' y='1000'>
+            <zone h='98000' id='5' type-v2='layout-basic' w='98400' x='800' y='1000'>
+              <zone h='98000' id='3' name='Sheet 1' w='49200' x='800' y='1000'>
                 <zone-style>
                   <format attr='border-color' value='#000000' />
                   <format attr='border-style' value='none' />
@@ -856,7 +876,7 @@
                   <format attr='margin' value='4' />
                 </zone-style>
               </zone>
-              <zone h='98000' id='9' name='Sheet 2' w='41200' x='42000' y='1000'>
+              <zone h='98000' id='9' name='Sheet 2' w='49200' x='50000' y='1000'>
                 <zone-style>
                   <format attr='border-color' value='#000000' />
                   <format attr='border-style' value='none' />
@@ -865,7 +885,6 @@
                 </zone-style>
               </zone>
             </zone>
-            <zone fixed-size='160' h='98000' id='6' is-fixed='true' param='vert' type-v2='layout-flow' w='16000' x='83200' y='1000' />
           </zone>
           <zone-style>
             <format attr='border-color' value='#000000' />
@@ -974,7 +993,7 @@
       </cards>
       <simple-id uuid='{1ACE1719-1CBE-4B67-A1DF-9ED13DD32B15}' />
     </window>
-    <window class='dashboard' maximized='true' name='Dashboard 1'>
+    <window class='dashboard' name='Dashboard 1'>
       <viewpoints>
         <viewpoint name='Sheet 1'>
           <zoom type='entire-view' />
@@ -990,6 +1009,29 @@
       <viewpoints />
       <active id='-1' />
       <simple-id uuid='{6649690C-7440-4BBA-97CE-C7771524E45D}' />
+    </window>
+    <window class='worksheet' maximized='true' name='Sheet 3'>
+      <cards>
+        <edge name='left'>
+          <strip size='160'>
+            <card type='pages' />
+            <card type='filters' />
+            <card type='marks' />
+          </strip>
+        </edge>
+        <edge name='top'>
+          <strip size='31'>
+            <card type='columns' />
+          </strip>
+          <strip size='31'>
+            <card type='rows' />
+          </strip>
+          <strip size='31'>
+            <card type='title' />
+          </strip>
+        </edge>
+      </cards>
+      <simple-id uuid='{8DA8B539-44D0-4D4B-ABF0-90EB9E045E0C}' />
     </window>
   </windows>
 </workbook>
