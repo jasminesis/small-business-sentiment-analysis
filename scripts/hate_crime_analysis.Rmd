@@ -17,6 +17,7 @@ library(ggplot2)
 library(readr)
 library(sf)
 library(knitr)
+library(scales)
 ```
 ```{r}
 # NYPD Hate Crimes (from NYC Open Data)
@@ -122,25 +123,51 @@ ggplot(nyc_map_filtered) +
 ```
 
 ```{r}
+# Percentage of offense categories in anti-Asian hate crimes
 categories <- hate_crime %>% 
   filter(`Bias Motive Description` == "ANTI-ASIAN") %>% 
   group_by(`Law Code Category Description`) %>% 
-  summarise(count = n())
-cat_table <- categories %>% 
-  knitr::kable(col.names = c("Offense Category", "Count"), 
-        caption = "Asian Hate Crimes by Law Code Category Description") %>% 
-  kableExtra::kable_styling()
-cat_table
+  summarise(count = n()) %>% 
+   mutate(percentage = count / sum(count) * 100,
+          label = paste0(`Law Code Category Description`, ": ", percent(count / sum(count))))
+
+offense_cat <- ggplot(categories, aes(x = "", y = percentage, fill = `Law Code Category Description`)) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar("y") +
+  labs(title = "Percentage of Offense Categories in Anti-Asian Hate Crimes") +
+  theme_minimal() +
+  theme(axis.text.x = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank()) +
+  scale_fill_discrete(name = "Offense Category")+
+  geom_text(aes(label = label), position = position_stack(vjust = 0.5), size = 3)
+
+ggsave("offense_cat.png", plot = offense_cat)
 ```
+```{r}
+# Types of Felony 
+felony_type <- hate_crime %>% 
+  filter(`Bias Motive Description` == "ANTI-ASIAN", 
+         `Law Code Category Description` == "FELONY") %>% 
+  group_by(`Offense Description`) %>%
+  summarise(count = n())
+
+felony <- ggplot(felony, aes(x = `Offense Description`, y = count)) +
+  geom_bar(stat = "identity", fill = "lightblue") +
+  labs(title = "Count of Each Type of Felony for Anti-Asian Bias",
+       x = "Type of Felony",
+       y = "Count") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+ggsave("felony.png", plot = felony)
+```
+
+
 ```{r}
 unique_bias_motives_count <- length(unique(hate_crime$`Bias Motive Description`))
 
 print(unique_bias_motives_count)
 ```
-
-
-
-
 
 
 
