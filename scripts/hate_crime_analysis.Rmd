@@ -79,11 +79,21 @@ asian_trend <- ggplot(asian_monthly, aes(x = YearMonth, y = incidents_count)) +
   scale_x_date(date_breaks = "1 year", date_labels = "%Y")+
   geom_vline(xintercept = as.Date("2021-03-15"), linetype = "dashed", color = "red") +
   geom_text(aes(x = as.Date("2021-03-16"), y = max(asian_monthly$incidents_count), 
-                label = "Stop Asian Hate"), angle = 270, vjust = -0.5, color = "red", size = 2)
+                label = "Stop AAPI Hate"), angle = 270, vjust = -0.5, color = "red", size = 2)  + 
+  geom_vline(xintercept = as.Date("2020-03-17"), linetype = "dashed", color = "blue") +
+  geom_text(aes(x = as.Date("2020-03-17"), y = max(asian_monthly$incidents_count), 
+                label = "COVID-19"), angle = 270, vjust = -0.5, color = "blue", size = 2) 
 # ggsave("asian_trend.png", plot = asian_trend)
 show(asian_trend)
 ```
-
+```{r}
+asian_hate_2020 <- hate_crime %>% 
+  filter(`Bias Motive Description` == "ANTI-ASIAN") %>% 
+  group_by(YearMonth) %>%
+  summarize(incidents_count = n()) %>% 
+  mutate(trend = "Asian") 
+asian_hate_2020
+```
 
 ```{r}
 # Create a choropleth map for precinct 
@@ -117,10 +127,15 @@ categories <- hate_crime %>%
   group_by(`Law Code Category Description`) %>% 
   summarise(count = n())
 cat_table <- categories %>% 
-  knitr::kable(col.names = c("Law Code Category Description", "Count"), 
+  knitr::kable(col.names = c("Offense Category", "Count"), 
         caption = "Asian Hate Crimes by Law Code Category Description") %>% 
   kableExtra::kable_styling()
 cat_table
+```
+```{r}
+unique_bias_motives_count <- length(unique(hate_crime$`Bias Motive Description`))
+
+print(unique_bias_motives_count)
 ```
 
 
