@@ -4,7 +4,9 @@ Data Driven Methods of Policy Evaluation group project
 
 ## Results
 
+<p align="center">
 <img src="figures/polarity_for_1_star.png" width="80%" alt="polarity of 1 star Asian reviews">
+</p>
 
 ![count of all reviews by cuisine](figures/count_by_cuisine.png)
 
