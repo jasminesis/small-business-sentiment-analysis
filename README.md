@@ -2,6 +2,12 @@
 
 Data Driven Methods of Policy Evaluation group project
 
+![polarity of 1 star Asian reviews](figures/polarity_for_1_star.png)
+
+![count of all reviews by cuisine](figures/count_by_cuisine.png)
+
+![felony counts](figures/felony.png)
+
 ## Data
 
 [Data on Google Drive](https://drive.google.com/drive/u/1/folders/1iueQxhS5ttYFrF6E2TuhFnYfAS8RS4RM)
