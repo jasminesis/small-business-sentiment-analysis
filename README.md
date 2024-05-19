@@ -7,10 +7,12 @@ Data Driven Methods of Policy Evaluation group project
 <p align="center">
 <img src="figures/polarity_for_1_star.png" width="80%" alt="polarity of 1 star Asian reviews">
 </p>
-
-![count of all reviews by cuisine](figures/count_by_cuisine.png)
-
-![felony counts](figures/felony.png)
+<p align="center">
+<img src="figures/count_by_cuisine.png" width="80%" alt="count of all reviews by cuisine">
+</p>
+<p align="center">
+<img src="figures/felony.png" width="80%" alt="felony counts">
+</p>
 
 ## Data
 
