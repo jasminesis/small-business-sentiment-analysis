@@ -2,6 +2,8 @@
 
 Data Driven Methods of Policy Evaluation group project
 
+Sophia Deng, Jiashu Liu, Jasmine Siswandjo
+
 Our study oﬀers a unique perspective while contributing to the literature surrounding the impact of COVID-19 and the Stop AAPI Hate movement on Asian communities and restaurants, as it relates to restaurant review data. Reviews are a widely accessible and inﬂuential medium, and can shape subsequent interactions and opinions on a larger scale. Our results show that there was a notable impact of COVID-19 and Stop AAPI Hate on the overall sentiment and safety of Asians living in New York City. While initial analyses of average ratings and polarity suggested Asian restaurants did not experience negative impacts akin to Mexican or pizza establishments, a deeper analysis of polarity across 1 star and 5 star reviews uncovered a marked increase in negativity within both 1 star and 5 star reviews, particularly in comparison. Similarly, hate crime spiked sharply during the key months in our timeline. Interestingly, the uptick in positivity starting from before the Stop AAPI Hate coalition seems to precede the movement.
 
 ## Results
